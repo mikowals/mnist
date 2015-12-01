@@ -31,8 +31,8 @@ flags.DEFINE_float('learning_rate', 1e-3, 'Initial learning rate.')
 flags.DEFINE_float('momentum', 0.5, 'Initial momentum.')
 flags.DEFINE_float('max_norm', 2.0,'max norm of weights')
 flags.DEFINE_integer('max_steps', 10000000, 'Number of steps to run trainer.')
-flags.DEFINE_integer('hidden1', 500, 'Number of units in hidden layer 1.')
-flags.DEFINE_integer('hidden2',500, 'Number of units in hidden layer 2.')
+flags.DEFINE_integer('hidden1', 1024, 'Number of units in hidden layer 1.')
+flags.DEFINE_integer('hidden2', 1024, 'Number of units in hidden layer 2.')
 flags.DEFINE_integer('hidden3', 1200, 'Number of units in hidden layer 3.')
 flags.DEFINE_integer('keep_prob', 0.50, 'dropout ratio for hidden layers')
 flags.DEFINE_integer('keep_input', 0.80, 'dropout ratio for input layer')
@@ -112,7 +112,9 @@ def run_training():
     train_op = mnist.training(loss, FLAGS.learning_rate, FLAGS.momentum)
     # Add the Op to compare the logits to the labels during evaluation.
     eval_correct = mnist.evaluation(logits, labels_placeholder)
-
+    precision_labels = tf.constant(["correct_train", "correct_test"])
+    precision_placeholder = tf.placeholder(tf.float32, [2])
+    summarize_precision = tf.scalar_summary(precision_labels, precision_placeholder)
     # Build the summary operation based on the TF collection of Summaries.
     summary_op = tf.merge_all_summaries()
   
@@ -132,7 +134,7 @@ def run_training():
     # saver.restore(sess, 'data-3999')
     # Instantiate a SummaryWriter to output summaries and the Graph.
     summary_writer = tf.train.SummaryWriter(FLAGS.train_dir, sess.graph_def)
-
+    train_cor = test_cor = 0.97
     # And then after everything is built, start the training loop.
     for step in xrange(FLAGS.max_steps):
       start_time = time.time()
@@ -156,6 +158,8 @@ def run_training():
         # Print status to stdout.
         print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
         # Update the events file.
+        feed_dict[precision_placeholder] = [train_cor, test_cor]
+        sess.run(summarize_precision, feed_dict=feed_dict)
         summary_str = sess.run(summary_op, feed_dict=feed_dict)
         summary_writer.add_summary(summary_str, step)
 
@@ -166,17 +170,18 @@ def run_training():
         
         # Evaluate against the validation set.
         print('training Data Eval:')
-        val_cor = do_eval(sess,
+        train_cor = do_eval(sess,
                 eval_correct,
                 data_sets.train,
                 'training')
   #      sess.run(logValue, feed_dict={out_pl: val_cor, label_pl: 'validation_correct'})
         # Evaluate against the test set.
         print('Test Data Eval:')
-        do_eval(sess,
+        test_cor = do_eval(sess,
                 eval_correct,
                 data_sets.test,
                 'test')
+        
 
 
 def main(_):

@@ -41,10 +41,24 @@ NUM_CLASSES = 10
 IMAGE_SIZE = 28
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 
-def gaussian_dropout(t, p):
-  sd = tf.sqrt(tf.div(tf.sub(1.0, p), p))  # ((1 - p) / p) ** (1/2)
-  noise = tf.random_normal( tf.shape(t), mean=1.0, stddev=sd)
-  return t * noise
+def p_relu(t, a, name=None):
+  with tf.op_scope([t, a], name, "p_relu") as scope:
+    return tf.maximum(t,0.0) + tf.mul(a, tf.minimum(t, 0.0))
+
+def gaussian_dropout(t, p, name=None):
+  with tf.op_scope([t, p], name, "gaussian_dropout") as scope:
+    sd = tf.sqrt(tf.div(tf.sub(1.0, p), p))  # ((1 - p) / p) ** (1/2)
+    noise = tf.random_normal( tf.shape(t), mean=1.0, stddev=sd)
+    return t * noise
+
+def clip_weights_by_norm(t, clip_norm, name=None):
+  with tf.op_scope([t, clip_norm], name, "max_norm") as scope:
+    l2norm_inv = tf.rsqrt(
+        tf.reduce_sum(t * t, 0))
+    tclip = tf.identity(t * clip_norm * tf.minimum(
+        l2norm_inv, tf.constant(1.0 / clip_norm)), name=name)
+
+  return tclip 
 
 def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0, keep_input=1.0, max_norm=100.0):
   """Build the MNIST model up to where it may be used for inference.
@@ -60,15 +74,18 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
 
   def hidden_layer(data, input_size, layer_size, name):
     with tf.name_scope(name) as scope:
+      a = tf.Variable(0.25, name="a_" + name)
       weights = tf.Variable(
-          tf.truncated_normal([input_size, layer_size],
-                              stddev=1.0 / math.sqrt(float(input_size))),
+          tf.random_normal([input_size, layer_size],
+                              stddev=math.sqrt(2.0 / (( 1.0 + 0.25 ** 2) * float(input_size)))),
           name='weights')
       biases = tf.Variable( tf.zeros([layer_size]),
                            name='biases')
-      weights = tf.clip_by_norm( weights, max_norm)
+      weights =clip_weights_by_norm( weights, max_norm)
       tf.histogram_summary('w_'+name, weights)
-      hidden = tf.nn.relu(tf.matmul(data, weights) + biases)
+      tf.histogram_summary('b_'+name, biases)
+      tf.scalar_summary('a_' + name, a)
+      hidden = p_relu(tf.matmul(data, weights) + biases, a)
       hidden_dropout = gaussian_dropout(hidden, keep_prob)
       return hidden_dropout
 
@@ -89,6 +106,7 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
     biases = tf.Variable(tf.zeros([NUM_CLASSES]),
                          name='biases')
     tf.histogram_summary('w_softmax', weights)
+    tf.histogram_summary('b_softmax', biases)
     logits = tf.matmul(hidden2, weights) + biases
   return logits
 
@@ -151,8 +169,8 @@ def training(loss, initial_learning_rate, initial_momentum):
   momentum = tf.minimum( final_momentum, 
       tf.add(initial_momentum,tf.mul(global_step, tf.div(tf.sub(final_momentum, initial_momentum), momentum_steps))))
   tf.scalar_summary(loss.op.name, loss)
-  tf.scalar_summary('momentum', momentum)
-  tf.scalar_summary('learning_rate', learning_rate)
+  tf.scalar_summary('model_momentum', momentum)
+  tf.scalar_summary('model_learning_rate', learning_rate)
   # Create the gradient descent optimizer with the given learning rate.
   optimizer = tf.train.AdamOptimizer(initial_learning_rate)
   # Use the optimizer to apply the gradients that minimize the loss
