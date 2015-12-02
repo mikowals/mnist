@@ -249,4 +249,120 @@ Step 17400: loss = 0.12 (0.014 sec)
 Step 17500: loss = 0.11 (0.074 sec)
 Step 17600: loss = 0.08 (0.013 sec)
 Step 17700: loss = 0.05 (0.014 sec)
-Step 17800: loss = 0.18 (0
+Step 17800: loss = 0.18 (0.014 sec)
+Step 17900: loss = 0.13 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9671  Precision @ 1: 0.9671
+Step 18000: loss = 0.13 (0.076 sec)
+Step 18100: loss = 0.14 (0.013 sec)
+Step 18200: loss = 0.06 (0.014 sec)
+Step 18300: loss = 0.21 (0.013 sec)
+Step 18400: loss = 0.09 (0.014 sec)
+Step 18500: loss = 0.11 (0.069 sec)
+Step 18600: loss = 0.07 (0.013 sec)
+Step 18700: loss = 0.10 (0.015 sec)
+Step 18800: loss = 0.20 (0.014 sec)
+Step 18900: loss = 0.13 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9677  Precision @ 1: 0.9677
+Step 19000: loss = 0.13 (0.075 sec)
+Step 19100: loss = 0.17 (0.013 sec)
+Step 19200: loss = 0.19 (0.014 sec)
+Step 19300: loss = 0.08 (0.014 sec)
+Step 19400: loss = 0.05 (0.014 sec)
+Step 19500: loss = 0.15 (0.075 sec)
+Step 19600: loss = 0.16 (0.014 sec)
+Step 19700: loss = 0.15 (0.014 sec)
+Step 19800: loss = 0.13 (0.013 sec)
+Step 19900: loss = 0.12 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9693  Precision @ 1: 0.9693
+Step 20000: loss = 0.11 (0.076 sec)
+Step 20100: loss = 0.11 (0.014 sec)
+Step 20200: loss = 0.14 (0.013 sec)
+Step 20300: loss = 0.10 (0.014 sec)
+Step 20400: loss = 0.07 (0.014 sec)
+Step 20500: loss = 0.07 (0.074 sec)
+Step 20600: loss = 0.05 (0.015 sec)
+Step 20700: loss = 0.22 (0.014 sec)
+Step 20800: loss = 0.16 (0.014 sec)
+Step 20900: loss = 0.07 (0.015 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9699  Precision @ 1: 0.9699
+Step 21000: loss = 0.14 (0.075 sec)
+Step 21100: loss = 0.12 (0.014 sec)
+Step 21200: loss = 0.06 (0.014 sec)
+Step 21300: loss = 0.16 (0.014 sec)
+Step 21400: loss = 0.06 (0.015 sec)
+Step 21500: loss = 0.08 (0.073 sec)
+Step 21600: loss = 0.08 (0.014 sec)
+Step 21700: loss = 0.11 (0.014 sec)
+Step 21800: loss = 0.09 (0.014 sec)
+Step 21900: loss = 0.21 (0.013 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9702  Precision @ 1: 0.9702
+Step 22000: loss = 0.19 (0.070 sec)
+Step 22100: loss = 0.09 (0.014 sec)
+Step 22200: loss = 0.05 (0.014 sec)
+Step 22300: loss = 0.12 (0.014 sec)
+Step 22400: loss = 0.13 (0.014 sec)
+Step 22500: loss = 0.12 (0.075 sec)
+Step 22600: loss = 0.19 (0.014 sec)
+Step 22700: loss = 0.07 (0.014 sec)
+Step 22800: loss = 0.11 (0.013 sec)
+Step 22900: loss = 0.05 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9708  Precision @ 1: 0.9708
+Step 23000: loss = 0.05 (0.074 sec)
+Step 23100: loss = 0.11 (0.014 sec)
+Step 23200: loss = 0.21 (0.015 sec)
+Step 23300: loss = 0.05 (0.015 sec)
+Step 23400: loss = 0.06 (0.014 sec)
+Step 23500: loss = 0.10 (0.074 sec)
+Step 23600: loss = 0.08 (0.014 sec)
+Step 23700: loss = 0.14 (0.015 sec)
+Step 23800: loss = 0.04 (0.013 sec)
+Step 23900: loss = 0.08 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9718  Precision @ 1: 0.9718
+Step 24000: loss = 0.08 (0.075 sec)
+Step 24100: loss = 0.06 (0.013 sec)
+Step 24200: loss = 0.11 (0.013 sec)
+Step 24300: loss = 0.12 (0.015 sec)
+Step 24400: loss = 0.12 (0.014 sec)
+Step 24500: loss = 0.14 (0.075 sec)
+Step 24600: loss = 0.10 (0.015 sec)
+Step 24700: loss = 0.14 (0.014 sec)
+Step 24800: loss = 0.05 (0.013 sec)
+Step 24900: loss = 0.10 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9723  Precision @ 1: 0.9723
+Step 25000: loss = 0.17 (0.075 sec)
+Step 25100: loss = 0.11 (0.014 sec)
+Step 25200: loss = 0.11 (0.014 sec)
+Step 25300: loss = 0.12 (0.013 sec)
+Step 25400: loss = 0.07 (0.015 sec)
+Step 25500: loss = 0.10 (0.073 sec)
+Step 25600: loss = 0.07 (0.015 sec)
+Step 25700: loss = 0.15 (0.014 sec)
+Step 25800: loss = 0.04 (0.014 sec)
+Step 25900: loss = 0.17 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9726  Precision @ 1: 0.9726
+Step 26000: loss = 0.09 (0.075 sec)
+Step 26100: loss = 0.11 (0.014 sec)
+Step 26200: loss = 0.07 (0.013 sec)
+Step 26300: loss = 0.09 (0.014 sec)
+Step 26400: loss = 0.09 (0.015 sec)
+Step 26500: loss = 0.27 (0.076 sec)
+Step 26600: loss = 0.08 (0.015 sec)
+Step 26700: loss =
