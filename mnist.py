@@ -28,7 +28,7 @@ https://tensorflow.org/tutorials/mnist/tf/index.html
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+import numpy as np
 import math
 
 import tensorflow.python.platform
@@ -74,18 +74,18 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
 
   def hidden_layer(data, input_size, layer_size, name):
     with tf.name_scope(name) as scope:
-      a = tf.Variable(0.25, name="a_" + name)
+      #a = tf.Variable(0.25, name="a_" + name)
       weights = tf.Variable(
           tf.random_normal([input_size, layer_size],
-                              stddev=math.sqrt(2.0 / (( 1.0 + 0.25 ** 2) * float(input_size)))),
+                              stddev=math.sqrt(2.0 / (( 1.0 + 0.0 ** 2) * float(input_size)))),
           name='weights')
       biases = tf.Variable( tf.zeros([layer_size]),
                            name='biases')
       weights =clip_weights_by_norm( weights, max_norm)
       tf.histogram_summary('w_'+name, weights)
       tf.histogram_summary('b_'+name, biases)
-      tf.scalar_summary('a_' + name, a)
-      hidden = p_relu(tf.matmul(data, weights) + biases, a)
+      #tf.scalar_summary('a_' + name, a)
+      hidden = tf.nn.relu(tf.matmul(data, weights) + biases)
       hidden_dropout = gaussian_dropout(hidden, keep_prob)
       return hidden_dropout
 
@@ -95,7 +95,7 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
   # near working attempt at visualisation.  See 3 images when expecting 10
   #tf.image_summary('images', tf.expand_dims(tf.reshape(tf.slice(images,[0,0],[5,784]), [5, 28, 28]), 3))
   hidden2 = hidden_layer(hidden1, hidden1_units, hidden2_units, 'hidden2')
-  
+  #hidden3 = hidden_layer(hidden2, hidden2_units, hidden3_units, 'hidden3')  
   
   # Linear
   with tf.name_scope('softmax_linear') as scope:
@@ -138,7 +138,7 @@ def loss(logits, labels):
   return loss
 
 
-def training(loss, initial_learning_rate, initial_momentum):
+def training(loss, initial_learning_rate, initial_momentum, beta2=0.999):
   """Sets up the training Ops.
 
   Creates a summarizer to track the loss over time in TensorBoard.
@@ -160,11 +160,10 @@ def training(loss, initial_learning_rate, initial_momentum):
   learning_rate = tf.train.exponential_decay(
       initial_learning_rate,        # Base learning rate.
       global_step,  # Current index into the dataset.
-      550,          # Decay step.
+      300,          # Decay step.
       0.993,                # Decay rate.
       staircase=False)
-  momentum = tf.Variable(initial_momentum)
-  final_momentum = tf.Variable(0.95)
+  final_momentum = tf.Variable(0.97)
   momentum_steps = tf.Variable(20000.0)
   momentum = tf.minimum( final_momentum, 
       tf.add(initial_momentum,tf.mul(global_step, tf.div(tf.sub(final_momentum, initial_momentum), momentum_steps))))
@@ -172,11 +171,14 @@ def training(loss, initial_learning_rate, initial_momentum):
   tf.scalar_summary('model_momentum', momentum)
   tf.scalar_summary('model_learning_rate', learning_rate)
   # Create the gradient descent optimizer with the given learning rate.
-  optimizer = tf.train.AdamOptimizer(initial_learning_rate)
+  optimizer = tf.train.AdamOptimizer(initial_learning_rate, initial_momentum, beta2=beta2)
   # Use the optimizer to apply the gradients that minimize the loss
   # (and also increment the global step counter) as a single training step.
   #max_norm_tensor = tf.Variable(max_norm, name='max_norm')
-
+  #tvars = tf.trainable_variables()
+  #grads, _ = tf.clip_by_global_norm(tf.gradients(loss, tvars),
+  #                                    5.0)
+  #train_op = optimizer.apply_gradients(zip(grads, tvars), global_step=global_step)
   train_op = optimizer.minimize(loss, global_step=global_step)
   return train_op
 

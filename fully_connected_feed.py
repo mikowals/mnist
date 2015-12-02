@@ -22,27 +22,37 @@ import tensorflow as tf
 
 import input_data
 import mnist
-NUM_CORES = 2
 
 # Basic model parameters as external flags.
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-flags.DEFINE_float('learning_rate', 1e-3, 'Initial learning rate.')
+flags.DEFINE_float('learning_rate', 0.2, 'Initial learning rate.')
 flags.DEFINE_float('momentum', 0.5, 'Initial momentum.')
+flags.DEFINE_float('beta2', 0.999, 'second moment for gradient in Adam.')
 flags.DEFINE_float('max_norm', 2.0,'max norm of weights')
-flags.DEFINE_integer('max_steps', 10000000, 'Number of steps to run trainer.')
-flags.DEFINE_integer('hidden1', 1024, 'Number of units in hidden layer 1.')
-flags.DEFINE_integer('hidden2', 1024, 'Number of units in hidden layer 2.')
-flags.DEFINE_integer('hidden3', 1200, 'Number of units in hidden layer 3.')
+flags.DEFINE_integer('max_steps', 100000, 'Number of steps to run trainer.')
+flags.DEFINE_integer('hidden1', 1000, 'Number of units in hidden layer 1.')
+flags.DEFINE_integer('hidden2', 1000, 'Number of units in hidden layer 2.')
+flags.DEFINE_integer('hidden3', 2048, 'Number of units in hidden layer 3.')
 flags.DEFINE_integer('keep_prob', 0.50, 'dropout ratio for hidden layers')
 flags.DEFINE_integer('keep_input', 0.80, 'dropout ratio for input layer')
 flags.DEFINE_integer('batch_size', 100, 'Batch size.  '
                      'Must divide evenly into the dataset sizes.')
+flags.DEFINE_integer('eval_batch_size', 10000, 'Batch size for eval.  '
+                     'Must divide evenly into the dataset sizes.')
 flags.DEFINE_string('train_dir', 'data', 'Directory to put the training data.')
 flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data '
                      'for unit testing.')
+flags.DEFINE_string('experiment-name', 'spearmint', 'Spearmint expiriement name')
+flags.DEFINE_string('database-address', 'localhost', 'mongodb host')
+flags.DEFINE_string('job-id', '001', 'Spearmint job id.')
 
-def run_training():
+
+def run_training(learning_rate=0.1,
+        momentum=0.8,
+        max_norm=2.0,
+        keep_prob=0.5,
+        beta2=0.999):
   """Train MNIST for a number of steps."""
   # Get the sets of images and labels for training, validation, and
   # test on MNIST.
@@ -51,15 +61,14 @@ def run_training():
   # Tell TensorFlow that the model will be built into the default Graph.
   with tf.Graph().as_default():
     # Generate placeholders for the images and labels.
-    images_placeholder = tf.placeholder(tf.float32, shape=(FLAGS.batch_size,
-                                                         mnist.IMAGE_PIXELS), name='images')
-    labels_placeholder = tf.placeholder(tf.int32, shape=(FLAGS.batch_size), name='labels')
+    images_placeholder = tf.placeholder(tf.float32, shape=None, name='images')
+    labels_placeholder = tf.placeholder(tf.int32, shape=None, name='labels')
     keep_prob_placeholder = tf.placeholder("float", name='keep_prob')
     keep_input_placeholder = tf.placeholder("float", name='keep_input')
-    def fill_feed_dict(data_set, keep_prob, keep_input):
+    def fill_feed_dict(data_set, keep_prob, keep_input, batch_size = FLAGS.batch_size):
       # Create the feed_dict for the placeholders filled with the next
       # `batch size ` examples.
-      images_feed, labels_feed = data_set.next_batch(FLAGS.batch_size,
+      images_feed, labels_feed = data_set.next_batch(batch_size,
                                                      FLAGS.fake_data)
       feed_dict = {
           images_placeholder: images_feed,
@@ -84,12 +93,13 @@ def run_training():
           input_data.read_data_sets().
       """
       # And run one epoch of eval.
+     
       true_count = 0  # Counts the number of correct predictions.
-      steps_per_epoch = data_set.num_examples // FLAGS.batch_size
-      num_examples = steps_per_epoch * FLAGS.batch_size
+      steps_per_epoch = data_set.num_examples // FLAGS.eval_batch_size
+      num_examples = steps_per_epoch * FLAGS.eval_batch_size
       for step in xrange(steps_per_epoch):
         feed_dict = fill_feed_dict(data_set,
-                                   1.0, 1.0)
+                                   1.0, 1.0, FLAGS.eval_batch_size)
         true_count += sess.run(eval_correct, feed_dict=feed_dict)
       precision = true_count / num_examples
       print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
@@ -103,13 +113,13 @@ def run_training():
                          FLAGS.hidden3,
                          keep_prob_placeholder,
                          keep_input_placeholder,
-                         FLAGS.max_norm)
+                         max_norm)
 
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
     
     # Add to the Graph the Ops that calculate and apply gradients.
-    train_op = mnist.training(loss, FLAGS.learning_rate, FLAGS.momentum)
+    train_op = mnist.training(loss, learning_rate, momentum, beta2)
     # Add the Op to compare the logits to the labels during evaluation.
     eval_correct = mnist.evaluation(logits, labels_placeholder)
     precision_labels = tf.constant(["correct_train", "correct_test"])
@@ -141,7 +151,7 @@ def run_training():
       
       # Fill a feed dictionary with the actual set of images and labels
       # for this particular training step.
-      feed_dict = fill_feed_dict(data_sets.train, FLAGS.keep_prob, FLAGS.keep_input)
+      feed_dict = fill_feed_dict(data_sets.train, keep_prob, FLAGS.keep_input)
       
       # Run one step of the model.  The return values are the activations
       # from the `train_op` (which is discarded) and the `loss` Op.  To
@@ -165,27 +175,36 @@ def run_training():
 
       # Save a checkpoint and evaluate the model periodically.
       if (step + 1) % 1000 == 0 or (step + 1) == FLAGS.max_steps:
-        saver.save(sess, FLAGS.train_dir, global_step=step)
+        #saver.save(sess, FLAGS.train_dir, global_step=step)
         # Evaluate against the training set.
         
         # Evaluate against the validation set.
         print('training Data Eval:')
-        train_cor = do_eval(sess,
-                eval_correct,
-                data_sets.train,
-                'training')
+  #      train_cor = do_eval(sess,
+  #              eval_correct,
+  #              data_sets.train,
+  #              'training')
   #      sess.run(logValue, feed_dict={out_pl: val_cor, label_pl: 'validation_correct'})
         # Evaluate against the test set.
         print('Test Data Eval:')
         test_cor = do_eval(sess,
                 eval_correct,
-                data_sets.test,
+                data_sets.validation,
                 'test')
-        
+        if (step > 5000) and (test_cor < 0.9):
+          return 1.0 - test_cor        
+        if (step > 15000) and (test_cor < 0.95):
+          return 1.0 - test_cor
 
+  return 1.0 - test_cor
 
-def main(_):
-  run_training()
+def main(job_id, params):
+  return run_training(
+        learning_rate=params['learning_rate'][0].item(),
+        momentum=params['momentum'][0].item(),
+        max_norm=params['max_norm'][0].item(),
+        keep_prob=params['keep_prob'][0].item(),
+        beta2=params['beta2'][0].item())
 
 
 if __name__ == '__main__':
