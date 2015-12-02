@@ -1,0 +1,37 @@
+{
+    "language"        : "PYTHON",
+    "main-file"       : "fully_connected_feed.py",
+    "experiment-name" : "mnist-2layer-1000",
+    "variables" : {
+        "learning_rate" : {
+            "type" : "FLOAT",
+            "size" : 1,
+            "min"  : 1e-6,
+            "max"  : 1
+        },
+        "keep_prob" : {
+            "type" : "FLOAT",
+            "size" : 1,
+            "min"  : 0.4,
+            "max"  : 0.9
+        },
+        "max_norm" : {
+            "type" : "FLOAT",
+            "size" : 1,
+            "min"  : 1.0,
+            "max"  : 30
+        },
+        "momentum" : {
+            "type" : "FLOAT",
+            "size" : 1,
+            "min"  : 0.5,
+            "max"  : 0.99
+        },
+        "beta2" : {
+            "type" : "FLOAT",
+            "size" : 1,
+            "min"  : 0.8,
+            "max"  : 0.9999
+        }
+    }
+}
