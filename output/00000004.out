@@ -1,0 +1,252 @@
+Job launching after 0.09 seconds in submission.
+Running python job.
+Changed into dir /home/ubuntu/mnist
+Importing fully_connected_feed.py
+Running fully_connected_feed.main()
+I tensorflow/core/common_runtime/local_device.cc:25] Local device intra op parallelism threads: 8
+I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:888] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+I tensorflow/core/common_runtime/gpu/gpu_init.cc:88] Found device 0 with properties: 
+name: GRID K520
+major: 3 minor: 0 memoryClockRate (GHz) 0.797
+pciBusID 0000:00:03.0
+Total memory: 4.00GiB
+Free memory: 3.95GiB
+I tensorflow/core/common_runtime/gpu/gpu_init.cc:112] DMA: 0 
+I tensorflow/core/common_runtime/gpu/gpu_init.cc:122] 0:   Y 
+I tensorflow/core/common_runtime/gpu/gpu_device.cc:644] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GRID K520, pci bus id: 0000:00:03.0)
+I tensorflow/core/common_runtime/gpu/gpu_region_allocator.cc:47] Setting region size to 3927400448
+I tensorflow/core/common_runtime/direct_session.cc:45] Direct session inter op parallelism threads: 8
+Extracting data/train-images-idx3-ubyte.gz
+Extracting data/train-labels-idx1-ubyte.gz
+Extracting data/t10k-images-idx3-ubyte.gz
+Extracting data/t10k-labels-idx1-ubyte.gz
+Step 0: loss = 2.47 (0.139 sec)
+Step 100: loss = 2.02 (0.013 sec)
+Step 200: loss = 1.74 (0.014 sec)
+Step 300: loss = 1.32 (0.014 sec)
+Step 400: loss = 1.19 (0.015 sec)
+Step 500: loss = 0.89 (0.069 sec)
+Step 600: loss = 0.73 (0.014 sec)
+Step 700: loss = 0.62 (0.013 sec)
+Step 800: loss = 0.68 (0.013 sec)
+Step 900: loss = 0.51 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 8808  Precision @ 1: 0.8808
+Step 1000: loss = 0.54 (0.078 sec)
+Step 1100: loss = 0.42 (0.014 sec)
+Step 1200: loss = 0.52 (0.014 sec)
+Step 1300: loss = 0.59 (0.013 sec)
+Step 1400: loss = 0.45 (0.014 sec)
+Step 1500: loss = 0.44 (0.076 sec)
+Step 1600: loss = 0.43 (0.013 sec)
+Step 1700: loss = 0.40 (0.014 sec)
+Step 1800: loss = 0.38 (0.014 sec)
+Step 1900: loss = 0.35 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9109  Precision @ 1: 0.9109
+Step 2000: loss = 0.33 (0.076 sec)
+Step 2100: loss = 0.40 (0.015 sec)
+Step 2200: loss = 0.44 (0.014 sec)
+Step 2300: loss = 0.29 (0.014 sec)
+Step 2400: loss = 0.36 (0.014 sec)
+Step 2500: loss = 0.22 (0.077 sec)
+Step 2600: loss = 0.30 (0.014 sec)
+Step 2700: loss = 0.26 (0.014 sec)
+Step 2800: loss = 0.26 (0.014 sec)
+Step 2900: loss = 0.44 (0.015 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9231  Precision @ 1: 0.9231
+Step 3000: loss = 0.40 (0.075 sec)
+Step 3100: loss = 0.30 (0.014 sec)
+Step 3200: loss = 0.32 (0.014 sec)
+Step 3300: loss = 0.25 (0.014 sec)
+Step 3400: loss = 0.30 (0.014 sec)
+Step 3500: loss = 0.27 (0.075 sec)
+Step 3600: loss = 0.24 (0.014 sec)
+Step 3700: loss = 0.34 (0.014 sec)
+Step 3800: loss = 0.19 (0.014 sec)
+Step 3900: loss = 0.26 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9303  Precision @ 1: 0.9303
+Step 4000: loss = 0.22 (0.078 sec)
+Step 4100: loss = 0.21 (0.014 sec)
+Step 4200: loss = 0.20 (0.014 sec)
+Step 4300: loss = 0.25 (0.013 sec)
+Step 4400: loss = 0.24 (0.014 sec)
+Step 4500: loss = 0.17 (0.076 sec)
+Step 4600: loss = 0.31 (0.014 sec)
+Step 4700: loss = 0.20 (0.014 sec)
+Step 4800: loss = 0.27 (0.014 sec)
+Step 4900: loss = 0.23 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9378  Precision @ 1: 0.9378
+Step 5000: loss = 0.18 (0.076 sec)
+Step 5100: loss = 0.20 (0.015 sec)
+Step 5200: loss = 0.14 (0.014 sec)
+Step 5300: loss = 0.24 (0.014 sec)
+Step 5400: loss = 0.32 (0.014 sec)
+Step 5500: loss = 0.31 (0.076 sec)
+Step 5600: loss = 0.15 (0.013 sec)
+Step 5700: loss = 0.22 (0.015 sec)
+Step 5800: loss = 0.28 (0.015 sec)
+Step 5900: loss = 0.40 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9407  Precision @ 1: 0.9407
+Step 6000: loss = 0.23 (0.075 sec)
+Step 6100: loss = 0.27 (0.014 sec)
+Step 6200: loss = 0.20 (0.013 sec)
+Step 6300: loss = 0.21 (0.014 sec)
+Step 6400: loss = 0.21 (0.014 sec)
+Step 6500: loss = 0.19 (0.075 sec)
+Step 6600: loss = 0.19 (0.014 sec)
+Step 6700: loss = 0.26 (0.014 sec)
+Step 6800: loss = 0.16 (0.015 sec)
+Step 6900: loss = 0.18 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9452  Precision @ 1: 0.9452
+Step 7000: loss = 0.30 (0.075 sec)
+Step 7100: loss = 0.19 (0.014 sec)
+Step 7200: loss = 0.21 (0.015 sec)
+Step 7300: loss = 0.21 (0.015 sec)
+Step 7400: loss = 0.22 (0.013 sec)
+Step 7500: loss = 0.27 (0.070 sec)
+Step 7600: loss = 0.22 (0.015 sec)
+Step 7700: loss = 0.22 (0.014 sec)
+Step 7800: loss = 0.26 (0.015 sec)
+Step 7900: loss = 0.20 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9491  Precision @ 1: 0.9491
+Step 8000: loss = 0.29 (0.071 sec)
+Step 8100: loss = 0.19 (0.014 sec)
+Step 8200: loss = 0.20 (0.013 sec)
+Step 8300: loss = 0.22 (0.014 sec)
+Step 8400: loss = 0.17 (0.014 sec)
+Step 8500: loss = 0.23 (0.075 sec)
+Step 8600: loss = 0.14 (0.015 sec)
+Step 8700: loss = 0.15 (0.014 sec)
+Step 8800: loss = 0.12 (0.015 sec)
+Step 8900: loss = 0.18 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9514  Precision @ 1: 0.9514
+Step 9000: loss = 0.16 (0.075 sec)
+Step 9100: loss = 0.16 (0.014 sec)
+Step 9200: loss = 0.13 (0.013 sec)
+Step 9300: loss = 0.29 (0.014 sec)
+Step 9400: loss = 0.22 (0.014 sec)
+Step 9500: loss = 0.18 (0.075 sec)
+Step 9600: loss = 0.10 (0.013 sec)
+Step 9700: loss = 0.32 (0.014 sec)
+Step 9800: loss = 0.23 (0.013 sec)
+Step 9900: loss = 0.10 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9541  Precision @ 1: 0.9541
+Step 10000: loss = 0.15 (0.075 sec)
+Step 10100: loss = 0.15 (0.014 sec)
+Step 10200: loss = 0.23 (0.013 sec)
+Step 10300: loss = 0.12 (0.015 sec)
+Step 10400: loss = 0.12 (0.014 sec)
+Step 10500: loss = 0.21 (0.076 sec)
+Step 10600: loss = 0.21 (0.014 sec)
+Step 10700: loss = 0.18 (0.014 sec)
+Step 10800: loss = 0.23 (0.014 sec)
+Step 10900: loss = 0.24 (0.015 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9558  Precision @ 1: 0.9558
+Step 11000: loss = 0.19 (0.075 sec)
+Step 11100: loss = 0.16 (0.014 sec)
+Step 11200: loss = 0.20 (0.013 sec)
+Step 11300: loss = 0.25 (0.014 sec)
+Step 11400: loss = 0.12 (0.013 sec)
+Step 11500: loss = 0.16 (0.073 sec)
+Step 11600: loss = 0.28 (0.014 sec)
+Step 11700: loss = 0.19 (0.014 sec)
+Step 11800: loss = 0.20 (0.014 sec)
+Step 11900: loss = 0.12 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9587  Precision @ 1: 0.9587
+Step 12000: loss = 0.15 (0.074 sec)
+Step 12100: loss = 0.11 (0.013 sec)
+Step 12200: loss = 0.06 (0.014 sec)
+Step 12300: loss = 0.13 (0.014 sec)
+Step 12400: loss = 0.11 (0.015 sec)
+Step 12500: loss = 0.11 (0.075 sec)
+Step 12600: loss = 0.23 (0.014 sec)
+Step 12700: loss = 0.09 (0.014 sec)
+Step 12800: loss = 0.19 (0.014 sec)
+Step 12900: loss = 0.16 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9608  Precision @ 1: 0.9608
+Step 13000: loss = 0.15 (0.075 sec)
+Step 13100: loss = 0.24 (0.014 sec)
+Step 13200: loss = 0.19 (0.014 sec)
+Step 13300: loss = 0.17 (0.014 sec)
+Step 13400: loss = 0.05 (0.015 sec)
+Step 13500: loss = 0.20 (0.074 sec)
+Step 13600: loss = 0.07 (0.014 sec)
+Step 13700: loss = 0.31 (0.014 sec)
+Step 13800: loss = 0.17 (0.014 sec)
+Step 13900: loss = 0.30 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9613  Precision @ 1: 0.9613
+Step 14000: loss = 0.13 (0.074 sec)
+Step 14100: loss = 0.16 (0.014 sec)
+Step 14200: loss = 0.12 (0.014 sec)
+Step 14300: loss = 0.24 (0.014 sec)
+Step 14400: loss = 0.13 (0.014 sec)
+Step 14500: loss = 0.18 (0.075 sec)
+Step 14600: loss = 0.19 (0.014 sec)
+Step 14700: loss = 0.22 (0.014 sec)
+Step 14800: loss = 0.11 (0.013 sec)
+Step 14900: loss = 0.19 (0.015 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9626  Precision @ 1: 0.9626
+Step 15000: loss = 0.19 (0.074 sec)
+Step 15100: loss = 0.07 (0.015 sec)
+Step 15200: loss = 0.11 (0.014 sec)
+Step 15300: loss = 0.11 (0.014 sec)
+Step 15400: loss = 0.19 (0.014 sec)
+Step 15500: loss = 0.22 (0.070 sec)
+Step 15600: loss = 0.24 (0.014 sec)
+Step 15700: loss = 0.11 (0.013 sec)
+Step 15800: loss = 0.14 (0.014 sec)
+Step 15900: loss = 0.11 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9641  Precision @ 1: 0.9641
+Step 16000: loss = 0.07 (0.075 sec)
+Step 16100: loss = 0.17 (0.014 sec)
+Step 16200: loss = 0.11 (0.014 sec)
+Step 16300: loss = 0.08 (0.015 sec)
+Step 16400: loss = 0.07 (0.014 sec)
+Step 16500: loss = 0.07 (0.068 sec)
+Step 16600: loss = 0.04 (0.014 sec)
+Step 16700: loss = 0.09 (0.013 sec)
+Step 16800: loss = 0.09 (0.014 sec)
+Step 16900: loss = 0.08 (0.014 sec)
+training Data Eval:
+Test Data Eval:
+  Num examples: 10000  Num correct: 9667  Precision @ 1: 0.9667
+Step 17000: loss = 0.11 (0.075 sec)
+Step 17100: loss = 0.10 (0.014 sec)
+Step 17200: loss = 0.12 (0.014 sec)
+Step 17300: loss = 0.08 (0.013 sec)
+Step 17400: loss = 0.12 (0.014 sec)
+Step 17500: loss = 0.11 (0.074 sec)
+Step 17600: loss = 0.08 (0.013 sec)
+Step 17700: loss = 0.05 (0.014 sec)
+Step 17800: loss = 0.18 (0
