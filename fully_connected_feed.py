@@ -96,11 +96,11 @@ def run_training(learning_rate=0.1,
      
       true_count = 0  # Counts the number of correct predictions.
       true_loss = 0
-      steps_per_epoch = data_set.num_examples // FLAGS.eval_batch_size
-      num_examples = steps_per_epoch * FLAGS.eval_batch_size
-      for step in xrange(steps_per_epoch):
-        feed_dict = fill_feed_dict(data_set,
-                                   1.0, 1.0, FLAGS.eval_batch_size)
+      
+      num_examples = data_set.num_examples
+      
+      feed_dict = fill_feed_dict(data_set,
+                                   1.0, 1.0, num_examples)
         true_count, true_loss += sess.run([eval_correct, loss], feed_dict=feed_dict)
       precision = true_count / num_examples
       avg_loss = true_loss / steps_per_epoch
@@ -117,14 +117,17 @@ def run_training(learning_rate=0.1,
                          keep_prob_placeholder,
                          keep_input_placeholder,
                          max_norm)
-
+    logits_eval = mnist.inference( images_placeholder,
+      FLAGS.hidden1,
+      FLAGS.hidden2,
+      FLAGS.hidden3)
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
-    
+    loss_eval= mnist.loss(logits_eval, labels_placeholder)
     # Add to the Graph the Ops that calculate and apply gradients.
     train_op = mnist.training(loss, learning_rate, momentum, beta2)
     # Add the Op to compare the logits to the labels during evaluation.
-    eval_correct = mnist.evaluation(logits, labels_placeholder)
+    eval_correct = mnist.evaluation(logits_eval, labels_placeholder)
     precision_labels = tf.constant(["correct_train", "loss_train", "correct_test", "loss_test])
     precision_placeholder = tf.placeholder(tf.float32, [4])
     summarize_precision = tf.scalar_summary(precision_labels, precision_placeholder)
