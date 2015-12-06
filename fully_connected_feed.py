@@ -95,16 +95,19 @@ def run_training(learning_rate=0.1,
       # And run one epoch of eval.
      
       true_count = 0  # Counts the number of correct predictions.
+      true_loss = 0
       steps_per_epoch = data_set.num_examples // FLAGS.eval_batch_size
       num_examples = steps_per_epoch * FLAGS.eval_batch_size
       for step in xrange(steps_per_epoch):
         feed_dict = fill_feed_dict(data_set,
                                    1.0, 1.0, FLAGS.eval_batch_size)
-        true_count += sess.run(eval_correct, feed_dict=feed_dict)
+        true_count, true_loss += sess.run([eval_correct, loss], feed_dict=feed_dict)
       precision = true_count / num_examples
+      avg_loss = true_loss / steps_per_epoch
       print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
             (num_examples, true_count, precision))
-      return precision
+    
+      return precision, avg_loss
 
     # Build a Graph that computes predictions from the inference model.
     logits = mnist.inference(images_placeholder,
@@ -122,9 +125,10 @@ def run_training(learning_rate=0.1,
     train_op = mnist.training(loss, learning_rate, momentum, beta2)
     # Add the Op to compare the logits to the labels during evaluation.
     eval_correct = mnist.evaluation(logits, labels_placeholder)
-    precision_labels = tf.constant(["correct_train", "correct_test"])
-    precision_placeholder = tf.placeholder(tf.float32, [2])
+    precision_labels = tf.constant(["correct_train", "loss_train", "correct_test", "loss_test])
+    precision_placeholder = tf.placeholder(tf.float32, [4])
     summarize_precision = tf.scalar_summary(precision_labels, precision_placeholder)
+    
     # Build the summary operation based on the TF collection of Summaries.
     summary_op = tf.merge_all_summaries()
   
@@ -145,6 +149,7 @@ def run_training(learning_rate=0.1,
     # Instantiate a SummaryWriter to output summaries and the Graph.
     summary_writer = tf.train.SummaryWriter(FLAGS.train_dir, sess.graph_def)
     train_cor = test_cor = 0.97
+    train_loss = test_loss = 2.0
     # And then after everything is built, start the training loop.
     for step in xrange(FLAGS.max_steps):
       start_time = time.time()
@@ -168,8 +173,8 @@ def run_training(learning_rate=0.1,
         # Print status to stdout.
         print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
         # Update the events file.
-        feed_dict[precision_placeholder] = [train_cor, test_cor]
-        sess.run(summarize_precision, feed_dict=feed_dict)
+        feed_dict[precision_placeholder] = [train_cor, train_loss, test_cor, test_loss]
+        sess.run(summarize_train, summarize_test, feed_dict=feed_dict)
         summary_str = sess.run(summary_op, feed_dict=feed_dict)
         summary_writer.add_summary(summary_str, step)
 
@@ -180,23 +185,23 @@ def run_training(learning_rate=0.1,
         
         # Evaluate against the validation set.
         print('training Data Eval:')
-  #      train_cor = do_eval(sess,
-  #              eval_correct,
-  #              data_sets.train,
-  #              'training')
+        train_cor, train_loss = do_eval(sess,
+                eval_correct,
+                data_sets.train,
+                'train')
   #      sess.run(logValue, feed_dict={out_pl: val_cor, label_pl: 'validation_correct'})
         # Evaluate against the test set.
         print('Test Data Eval:')
-        test_cor = do_eval(sess,
+        test_cor, test_loss = do_eval(sess,
                 eval_correct,
                 data_sets.validation,
                 'test')
         if (step > 5000) and (test_cor < 0.9):
-          return 1.0 - test_cor        
+          return 1.0 - test_loss        
         if (step > 15000) and (test_cor < 0.95):
-          return 1.0 - test_cor
+          return test_loss
 
-  return 1.0 - test_cor
+  return test_loss
 
 def main(job_id, params):
   return run_training(
