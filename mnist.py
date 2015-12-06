@@ -71,13 +71,13 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
   Returns:
     softmax_linear: Output tensor with the computed logits.
   """
-
+  initial_a = 0.25
   def hidden_layer(data, input_size, layer_size, name):
     with tf.name_scope(name) as scope:
-      #a = tf.Variable(0.25, name="a_" + name)
+      a = tf.Variable(initial_a, name="a_" + name)
       weights = tf.Variable(
           tf.random_normal([input_size, layer_size],
-                              stddev=math.sqrt(2.0 / (( 1.0 + 0.0 ** 2) * float(input_size)))),
+                              stddev=math.sqrt(2.0 / (( 1.0 + initial_a ** 2) * float(input_size)))),
           name='weights')
       biases = tf.Variable( tf.zeros([layer_size]),
                            name='biases')
@@ -101,7 +101,7 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
   with tf.name_scope('softmax_linear') as scope:
     weights = tf.Variable(
         tf.truncated_normal([hidden2_units, NUM_CLASSES],
-                            stddev=1.0 / math.sqrt(float(hidden2_units))),
+                            stddev=math.sqrt(2.0 / ((1.0 + initial_a ** 2.0) * float(hidden2_units)))),
                             name='weights')
     biases = tf.Variable(tf.zeros([NUM_CLASSES]),
                          name='biases')
@@ -167,7 +167,7 @@ def training(loss, initial_learning_rate, initial_momentum, beta2=0.999):
   momentum_steps = tf.Variable(20000.0)
   momentum = tf.minimum( final_momentum, 
       tf.add(initial_momentum,tf.mul(global_step, tf.div(tf.sub(final_momentum, initial_momentum), momentum_steps))))
-  tf.scalar_summary(loss.op.name, loss)
+  
   tf.scalar_summary('model_momentum', momentum)
   tf.scalar_summary('model_learning_rate', learning_rate)
   # Create the gradient descent optimizer with the given learning rate.
