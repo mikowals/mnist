@@ -73,14 +73,16 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
   """
   initial_a = 0.25
   def hidden_layer(data, input_size, layer_size, name):
-    with tf.name_scope(name) as scope:
+    with tf.name_scope(name), tf.variable_scope(name) as scope:
       a = tf.Variable(initial_a, name="a_" + name)
-      weights = tf.Variable(
-          tf.random_normal([input_size, layer_size],
-                              stddev=math.sqrt(2.0 / (( 1.0 + initial_a ** 2) * float(input_size)))),
-          name='weights')
-      biases = tf.Variable( tf.zeros([layer_size]),
-                           name='biases')
+      weights = tf.get_variable("weights", 
+        [input_size, layer_size], 
+        initializer= tf.truncated_normal_initiaizer(
+          stddev=math.sqrt(2.0 / (( 1.0 + initial_a ** 2) * float(input_size)))))
+      
+      biases = tf.get_Variable( "biases", 
+        [layer_size], 
+        initializer=tf.zeros_initializer())
       weights =clip_weights_by_norm( weights, max_norm)
       tf.histogram_summary('w_'+name, weights)
       tf.histogram_summary('b_'+name, biases)
@@ -98,13 +100,15 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
   #hidden3 = hidden_layer(hidden2, hidden2_units, hidden3_units, 'hidden3')  
   
   # Linear
-  with tf.name_scope('softmax_linear') as scope:
-    weights = tf.Variable(
-        tf.truncated_normal([hidden2_units, NUM_CLASSES],
-                            stddev=math.sqrt(2.0 / ((1.0 + initial_a ** 2.0) * float(hidden2_units)))),
-                            name='weights')
-    biases = tf.Variable(tf.zeros([NUM_CLASSES]),
-                         name='biases')
+  with tf.name_scope('softmax_linear'), tf.variable_scope('softmax_linear') as scope:
+    weights = tf.get_variable("weights",
+      [hidden2_units, NUM_CLASSES],
+      inititalizer=tf.truncated_normal_initializer(stddev=math.sqrt(2.0 / ((1.0 + initial_a ** 2.0) * float(hidden2_units)))))
+                            
+    biases = tf.get_variable('biases',
+      [NUM_CLASSES],
+      initializer=tf.zeros_initializer())
+      
     tf.histogram_summary('w_softmax', weights)
     tf.histogram_summary('b_softmax', biases)
     logits = tf.matmul(hidden2, weights) + biases
