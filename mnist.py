@@ -4,6 +4,9 @@ network with max norm regularisaton.  A few learnings:
 
   * dropout not applied to softmax layer (input and hidden layers only )
   * max norm not applied to softmax layer - though it could be applied at a different rate
+  * max norm applied by hidden unit, 
+     - for example h1 has 784 weights (input size) at each hidden unit (w is 784 x h_units),  
+       so the norm of interest is the sqrt( sum of squares by columns)
   * adam optimiser works as well and faster than elaborate annealed learning and increasing momentum
   * loss function tried with raw cross_entropy rather than mean but needed very small learning rates
   * 
@@ -28,7 +31,7 @@ https://tensorflow.org/tutorials/mnist/tf/index.html
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import numpy as np
+
 import math
 
 import tensorflow.python.platform
@@ -40,25 +43,34 @@ NUM_CLASSES = 10
 # The MNIST images are always 28x28 pixels.
 IMAGE_SIZE = 28
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
+SEED = 25
 
-def p_relu(t, a, name=None):
-  with tf.op_scope([t, a], name, "p_relu") as scope:
-    return tf.maximum(t,0.0) + tf.mul(a, tf.minimum(t, 0.0))
+def p_relu_layer(x, w, b, a, name=None):
+  with tf.op_scope([x, w, b, a], name, "p_relu") as scope:
+    t = tf.matmul(x,w) + b
+    return tf.maximum(t,0) + tf.mul(a, tf.minimum(t,0))
 
-def gaussian_dropout(t, p, name=None):
+def max_out(t, size, name=None):
+  with tf.op_scope([t, size], name, "max_out") as scope:
+    t_size = tf.shape(t)
+    m = tf.reshape(t,[t_size[0], t_size[1] // size, size])
+    m = tf.reduce_max(m,2)
+    return m
+
+def gaussian_dropout(t, p, name=None, seed=None):
   with tf.op_scope([t, p], name, "gaussian_dropout") as scope:
-    sd = tf.sqrt(tf.div(tf.sub(1.0, p), p))  # ((1 - p) / p) ** (1/2)
-    noise = tf.random_normal( tf.shape(t), mean=1.0, stddev=sd)
+    sd = tf.sqrt(tf.div(tf.sub(1.0, p), p))
+    noise = tf.random_normal( tf.shape(t), mean=1.0, stddev=sd, seed=seed)
     return t * noise
 
-def clip_weights_by_norm(t, clip_norm, name=None):
-  with tf.op_scope([t, clip_norm], name, "max_norm") as scope:
+def clip_weight_norm(t, clip_norm, name=None):
+  with tf.op_scope([t, clip_norm], name, "clip_weight_norm") as scope:
     l2norm_inv = tf.rsqrt(
-        tf.reduce_sum(t * t, 0))
+      tf.reduce_sum(t * t, 0))
     tclip = tf.identity(t * clip_norm * tf.minimum(
-        l2norm_inv, tf.constant(1.0 / clip_norm)), name=name)
+      l2norm_inv, tf.constant(1.0 / clip_norm)))
 
-  return tclip 
+    return tclip
 
 def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0, keep_input=1.0, max_norm=100.0):
   """Build the MNIST model up to where it may be used for inference.
@@ -72,45 +84,50 @@ def inference(images, hidden1_units, hidden2_units, hidden3_units, keep_prob=1.0
     softmax_linear: Output tensor with the computed logits.
   """
   initial_a = 0.25
-  def hidden_layer(data, input_size, layer_size, name):
-    with tf.name_scope(name), tf.variable_scope(name) as scope:
-      a = tf.Variable(initial_a, name="a_" + name)
-      weights = tf.get_variable("weights", 
-        [input_size, layer_size], 
-        initializer= tf.truncated_normal_initiaizer(
-          stddev=math.sqrt(2.0 / (( 1.0 + initial_a ** 2) * float(input_size)))))
+  def hidden_layer(data, input_size, layer_size, name=None):
+    with tf.variable_op_scope([data, input_size, layer_size], name, "hidden_layer") as scope:
       
-      biases = tf.get_Variable( "biases", 
+      a = tf.get_variable("a", [1], initializer=tf.constant_initializer(initial_a))
+      weights = tf.get_variable('weights', 
+        [input_size, layer_size],
+        initializer=tf.truncated_normal_initializer(0,
+                              stddev=math.sqrt(2.0 / ((1.0 + initial_a ** 2.0) * float(input_size)))))
+      biases = tf.get_variable( "biases", 
         [layer_size], 
-        initializer=tf.zeros_initializer())
-      weights =clip_weights_by_norm( weights, max_norm)
-      tf.histogram_summary('w_'+name, weights)
-      tf.histogram_summary('b_'+name, biases)
-      #tf.scalar_summary('a_' + name, a)
-      hidden = tf.nn.relu(tf.matmul(data, weights) + biases)
+        initializer=tf.constant_initializer(0.0))
+      weights = clip_weight_norm(weights, max_norm, name='clipped_weights')
+      if not scope.reuse:
+        tf.histogram_summary(weights.name, weights)
+        tf.histogram_summary(biases.name, biases)
+        tf.scalar_summary(a.name, a[0])              
+
+      hidden = p_relu_layer(data, weights, biases, a)
+      #tf.scalar_summary('sparsity_'+hidden.name, tf.nn.zero_fraction(hidden))
       hidden_dropout = gaussian_dropout(hidden, keep_prob)
       return hidden_dropout
 
+  
   images = gaussian_dropout(images, keep_input)
   # Hidden 1
   hidden1 = hidden_layer(images, IMAGE_PIXELS, hidden1_units, 'hidden1')
   # near working attempt at visualisation.  See 3 images when expecting 10
-  #tf.image_summary('images', tf.expand_dims(tf.reshape(tf.slice(images,[0,0],[5,784]), [5, 28, 28]), 3))
+  #tf.image_summary('images', tf.reshape(hidden1,[, 5,784]), [5, 28, 28]), 3))
   hidden2 = hidden_layer(hidden1, hidden1_units, hidden2_units, 'hidden2')
-  #hidden3 = hidden_layer(hidden2, hidden2_units, hidden3_units, 'hidden3')  
+  
   
   # Linear
-  with tf.name_scope('softmax_linear'), tf.variable_scope('softmax_linear') as scope:
+  with tf.variable_scope('softmax_linear') as scope:
     weights = tf.get_variable("weights",
       [hidden2_units, NUM_CLASSES],
-      inititalizer=tf.truncated_normal_initializer(stddev=math.sqrt(2.0 / ((1.0 + initial_a ** 2.0) * float(hidden2_units)))))
+      initializer=tf.truncated_normal_initializer(stddev=math.sqrt(2.0 / ((1.0 + initial_a ** 2.0) * float(hidden2_units)))))
                             
     biases = tf.get_variable('biases',
       [NUM_CLASSES],
-      initializer=tf.zeros_initializer())
-      
-    tf.histogram_summary('w_softmax', weights)
-    tf.histogram_summary('b_softmax', biases)
+      initializer=tf.constant_initializer(0.0))
+    #weights = clip_weight_norm(weights, max_norm, name='clipped_weights')
+    if not scope.reuse:
+      tf.histogram_summary(weights.name, weights)
+      tf.histogram_summary(biases.name, biases)
     logits = tf.matmul(hidden2, weights) + biases
   return logits
 
@@ -139,10 +156,11 @@ def loss(logits, labels):
                                                           onehot_labels,
                                                           name='xentropy')
   loss = tf.reduce_mean(cross_entropy, name='xentropy_mean')
+
   return loss
 
 
-def training(loss, initial_learning_rate, initial_momentum, beta2=0.999):
+def training(loss, initial_learning_rate=0.001, initial_momentum=0.9, beta2=0.99):
   """Sets up the training Ops.
 
   Creates a summarizer to track the loss over time in TensorBoard.
@@ -165,24 +183,22 @@ def training(loss, initial_learning_rate, initial_momentum, beta2=0.999):
       initial_learning_rate,        # Base learning rate.
       global_step,  # Current index into the dataset.
       300,          # Decay step.
-      0.993,                # Decay rate.
+      0.998,                # Decay rate.
       staircase=False)
-  final_momentum = tf.Variable(0.97)
-  momentum_steps = tf.Variable(20000.0)
-  momentum = tf.minimum( final_momentum, 
-      tf.add(initial_momentum,tf.mul(global_step, tf.div(tf.sub(final_momentum, initial_momentum), momentum_steps))))
-  
+  #momentum = tf.Variable(initial_momentum)
+  #final_momentum = tf.Variable(0.95)
+  #momentum_steps = tf.Variable(20000.0)
+  momentum = tf.minimum( 0.99, 
+     tf.add(initial_momentum,tf.mul(global_step, tf.div(tf.sub(0.99, initial_momentum), 40000.0))))
+  #momentum = tf.identity( min( 0.95, initial_momentum + tf.to_float(global_step) * (0.95 - initial_momentum)/ 20000.0))
   tf.scalar_summary('model_momentum', momentum)
   tf.scalar_summary('model_learning_rate', learning_rate)
   # Create the gradient descent optimizer with the given learning rate.
-  optimizer = tf.train.AdamOptimizer(initial_learning_rate, initial_momentum, beta2=beta2)
+  optimizer = tf.train.AdamOptimizer(initial_learning_rate, initial_momentum, beta2)
   # Use the optimizer to apply the gradients that minimize the loss
   # (and also increment the global step counter) as a single training step.
   #max_norm_tensor = tf.Variable(max_norm, name='max_norm')
-  #tvars = tf.trainable_variables()
-  #grads, _ = tf.clip_by_global_norm(tf.gradients(loss, tvars),
-  #                                    5.0)
-  #train_op = optimizer.apply_gradients(zip(grads, tvars), global_step=global_step)
+
   train_op = optimizer.minimize(loss, global_step=global_step)
   return train_op
 
