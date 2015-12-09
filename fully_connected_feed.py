@@ -26,16 +26,16 @@ import mnist
 # Basic model parameters as external flags.
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-flags.DEFINE_float('learning_rate', 0.2, 'Initial learning rate.')
-flags.DEFINE_float('momentum', 0.5, 'Initial momentum.')
+flags.DEFINE_float('learning_rate', 0.05, 'Initial learning rate.')
+flags.DEFINE_float('momentum', 0.9, 'Initial momentum.')
 flags.DEFINE_float('beta2', 0.999, 'second moment for gradient in Adam.')
 flags.DEFINE_float('max_norm', 2.0,'max norm of weights')
-flags.DEFINE_integer('max_steps', 100000, 'Number of steps to run trainer.')
-flags.DEFINE_integer('hidden1', 300, 'Number of units in hidden layer 1.')
-flags.DEFINE_integer('hidden2', 300, 'Number of units in hidden layer 2.')
+flags.DEFINE_integer('max_steps', 50000, 'Number of steps to run trainer.')
+flags.DEFINE_integer('hidden1', 500, 'Number of units in hidden layer 1.')
+flags.DEFINE_integer('hidden2', 400, 'Number of units in hidden layer 2.')
 flags.DEFINE_integer('hidden3', 2048, 'Number of units in hidden layer 3.')
-flags.DEFINE_integer('keep_prob', 0.50, 'dropout ratio for hidden layers')
-flags.DEFINE_integer('keep_input', 0.80, 'dropout ratio for input layer')
+flags.DEFINE_integer('keep_prob', 0.90, 'dropout ratio for hidden layers')
+flags.DEFINE_integer('keep_input', 0.90, 'dropout ratio for input layer')
 flags.DEFINE_integer('batch_size', 100, 'Batch size.  '
                      'Must divide evenly into the dataset sizes.')
 flags.DEFINE_integer('eval_batch_size', 10000, 'Batch size for eval.  '
@@ -52,6 +52,7 @@ def run_training(learning_rate=FLAGS.learning_rate,
         momentum=FLAGS.momentum,
         max_norm=FLAGS.max_norm,
         keep_prob=FLAGS.keep_prob,
+        keep_input=FLAGS.keep_input,
         beta2=FLAGS.beta2):
   """Train MNIST for a number of steps."""
   # Get the sets of images and labels for training, validation, and
@@ -61,51 +62,54 @@ def run_training(learning_rate=FLAGS.learning_rate,
   # Tell TensorFlow that the model will be built into the default Graph.
   with tf.Graph().as_default():
     # Generate placeholders for the images and labels.
-    images_placeholder = tf.placeholder(tf.float32, shape=None, name='images')
-    labels_placeholder = tf.placeholder(tf.int32, shape=None, name='labels')
-    
-    def fill_feed_dict(data_set, batch_size = FLAGS.batch_size):
+    images_placeholder = tf.placeholder(tf.float32, shape=(None,
+                                                         mnist.IMAGE_PIXELS), name='images')
+    labels_placeholder = tf.placeholder(tf.int32, shape=[None], name='labels')
+
+    keep_prob_pl = tf.placeholder(tf.float32)
+    keep_input_pl = tf.placeholder(tf.float32)
+
+    def fill_feed_dict(data_set, batch_size=FLAGS.batch_size):
       # Create the feed_dict for the placeholders filled with the next
       # `batch size ` examples.
       images_feed, labels_feed = data_set.next_batch(batch_size,
                                                      FLAGS.fake_data)
       feed_dict = {
           images_placeholder: images_feed,
-          labels_placeholder: labels_feed
+          labels_placeholder: labels_feed,
+          keep_prob_pl: keep_prob,
+          keep_input_pl: keep_input,
       }
       return feed_dict
-
+    
     def fill_feed_dict_eval(data_set):
-
-      feed_dict = {
-          images_placeholder: data_set._images,
-          labels_placeholder: data_set._labels
+      return {
+        images_placeholder: data_set._images,
+        labels_placeholder: data_set._labels,
+        keep_prob_pl: 1.0,
+        keep_input_pl: 1.0,
       }
-      return feed_dict
 
     # Build a Graph that computes predictions from the inference model.
     with tf.variable_scope('feed_forward_model') as scope:
-      logits = mnist.inference(images_placeholder,
+      logits, bn = mnist.inference(images_placeholder,
                          FLAGS.hidden1,
                          FLAGS.hidden2,
                          FLAGS.hidden3,
-                         keep_prob,
-                         FLAGS.keep_input,
+                         keep_prob_pl,
+                         keep_input_pl,
                          max_norm)
-    
-      scope.reuse_variables()
-      logits_eval = mnist.inference(images_placeholder,
-                         FLAGS.hidden1,
-                         FLAGS.hidden2,
-                         FLAGS.hidden3)
 
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
-    loss_eval = mnist.loss( logits_eval, labels_placeholder)
+    #loss_eval = mnist.loss( logits, labels_placeholder)
     # Add to the Graph the Ops that calculate and apply gradients.
     train_op = mnist.training(loss, learning_rate, momentum, beta2)
+    
+    with tf.control_dependencies([train_op]):
+      train_op = apply(tf.group,[b.get_assigner() for b in bn])           
     # Add the Op to compare the logits to the labels during evaluation.
-    eval_correct = mnist.evaluation(logits_eval, labels_placeholder)
+    eval_correct = mnist.evaluation(logits, labels_placeholder)
     results = tf.placeholder( tf.float32, [4])
 
     summarize_evaluation = tf.scalar_summary(['correct_train', 'loss_train', 'correct_test', 'loss_test'], results)
@@ -147,28 +151,29 @@ def run_training(learning_rate=FLAGS.learning_rate,
       # returned in the tuple from the call.
       _, loss_value = sess.run([train_op, loss],
                                feed_dict=feed_dict)
-
+      
       duration = time.time() - start_time
       # Write the summaries and print an overview fairly often.
       
       # Save a checkpoint and evaluate the model periodically.
       if (step + 1) % 1000 == 0 or (step + 1) == FLAGS.max_steps:
-        saver.save(sess, FLAGS.train_dir, global_step=step)
+        #saver.save(sess, FLAGS.train_dir, global_step=step)
         # Evaluate against the training set.
         
         # Evaluate against the validation set.
         print('training Data Eval:')
         feed_dict = fill_feed_dict_eval(data_sets.train)
-        train_cor, train_loss = sess.run([eval_correct, loss_eval], feed_dict=feed_dict)
+        train_cor, train_loss = sess.run([eval_correct, loss], feed_dict=feed_dict)
         train_cor = train_cor / data_sets.train.num_examples
         print(train_cor, train_loss)
   
-        print('Test Data Eval:')
-        feed_dict = fill_feed_dict_eval(data_sets.test)
-        test_cor, test_loss = sess.run([eval_correct, loss_eval], feed_dict=feed_dict)
-        test_cor = test_cor / data_sets.test.num_examples
+        print('Validation Data Eval:')
+        feed_dict = fill_feed_dict_eval(data_sets.validation)
+        test_cor, test_loss = sess.run([eval_correct, loss], feed_dict=feed_dict)
+        test_cor = test_cor / data_sets.validation.num_examples
         print (test_cor, test_loss )
         
+
       if step % 100 == 0:
         # Print status to stdout.
         print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
@@ -181,14 +186,15 @@ def run_training(learning_rate=FLAGS.learning_rate,
         summary_str = sess.run(summary_op, feed_dict=feed_dict)
         summary_writer.add_summary(summary_str, step)
 
-  return test_loss
+  return -test_cor 
 
 def main(job_id='a-1', params={
-  "learning_rate": np.array([0.001]),
-  "momentum": np.array([0.90]),
-  "max_norm": np.array([2.0]),
-  "keep_prob": np.array([0.5]),
-  "beta2": np.array([0.999])
+  "learning_rate": np.array([FLAGS.learning_rate]),
+  "momentum": np.array([FLAGS.momentum]),
+  "max_norm": np.array([FLAGS.max_norm]),
+  "keep_prob": np.array([FLAGS.keep_prob]),
+  "keep_input": np.array([FLAGS.keep_input]),
+  "beta2": np.array([FLAGS.beta2])
   }):
   return run_training(
         learning_rate=params['learning_rate'][0].item(),

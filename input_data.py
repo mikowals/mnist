@@ -92,7 +92,7 @@ class DataSet(object):
                               images.shape[1] * images.shape[2])
       # Convert from [0, 255] -> [0.0, 1.0].
       images = images.astype(numpy.float32)
-      images = numpy.multiply(images, 1.0 / 255.0)
+      images = numpy.multiply(numpy.subtract(images, 122.5), 1.0 / 122.5)
     self._images = images
     self._labels = labels
     self._epochs_completed = 0
@@ -154,7 +154,7 @@ def read_data_sets(train_dir, fake_data=False, one_hot=False):
   TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
   TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
   TEST_LABELS = 't10k-labels-idx1-ubyte.gz'
-  VALIDATION_SIZE = 000
+  VALIDATION_SIZE = 5000
 
   local_file = maybe_download(TRAIN_IMAGES, train_dir)
   train_images = extract_images(local_file)
