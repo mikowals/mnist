@@ -1,0 +1,3 @@
+model_checkpoint_path: "data-19999"
+all_model_checkpoint_paths: "data-18999"
+all_model_checkpoint_paths: "data-19999"
