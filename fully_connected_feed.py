@@ -27,7 +27,7 @@ import mnist
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('learning_rate', 0.002, 'Initial learning rate.')
-flags.DEFINE_float('momentum', 0.5, 'Initial momentum.')
+flags.DEFINE_float('momentum', 0.95, 'Initial momentum.')
 flags.DEFINE_float('beta2', 0.999, 'second moment for gradient in Adam.')
 flags.DEFINE_float('max_norm', 2.0,'max norm of weights')
 flags.DEFINE_integer('max_steps', 200000, 'Number of steps to run trainer.')

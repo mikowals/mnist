@@ -206,7 +206,7 @@ def training(loss, initial_learning_rate=0.1, initial_momentum=0.9, beta2=0.999)
   tf.scalar_summary('model_momentum', momentum)
   tf.scalar_summary('model_learning_rate', learning_rate)
   # Create the gradient descent optimizer with the given learning rate.
-  optimizer = tf.train.AdamOptimizer(learning_rate)
+  optimizer = tf.train.AdamOptimizer(learning_rate, initial_momentum)
   #optimizer = tf.train.AdamOptimizer(initial_learning_rate, initial_momentum)
   # Use the optimizer to apply the gradients that minimize the loss
   # (and also increment the global step counter) as a single training step.
