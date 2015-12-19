@@ -26,18 +26,6 @@
             "size" : 1,
             "min"  : 0.5,
             "max"  : 12
-        },
-        "momentum" : {
-            "type" : "FLOAT",
-            "size" : 1,
-            "min"  : 0.5,
-            "max"  : 0.999
-        },
-        "beta2" : {
-            "type" : "FLOAT",
-            "size" : 1,
-            "min"  : 0.7,
-            "max"  : 0.99999
         }
     }
 }

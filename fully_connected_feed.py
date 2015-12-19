@@ -17,7 +17,7 @@ import time
 
 import tensorflow.python.platform
 import numpy as np
-from six.moves import xrange  # pylint: disable=redefined-builtin
+from six.moves import range  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 import input_data
@@ -26,16 +26,16 @@ import mnist
 # Basic model parameters as external flags.
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-flags.DEFINE_float('learning_rate', 0.05, 'Initial learning rate.')
-flags.DEFINE_float('momentum', 0.9, 'Initial momentum.')
+flags.DEFINE_float('learning_rate', 0.002, 'Initial learning rate.')
+flags.DEFINE_float('momentum', 0.5, 'Initial momentum.')
 flags.DEFINE_float('beta2', 0.999, 'second moment for gradient in Adam.')
 flags.DEFINE_float('max_norm', 2.0,'max norm of weights')
-flags.DEFINE_integer('max_steps', 50000, 'Number of steps to run trainer.')
+flags.DEFINE_integer('max_steps', 200000, 'Number of steps to run trainer.')
 flags.DEFINE_integer('hidden1', 500, 'Number of units in hidden layer 1.')
-flags.DEFINE_integer('hidden2', 400, 'Number of units in hidden layer 2.')
-flags.DEFINE_integer('hidden3', 2048, 'Number of units in hidden layer 3.')
-flags.DEFINE_integer('keep_prob', 0.90, 'dropout ratio for hidden layers')
-flags.DEFINE_integer('keep_input', 0.90, 'dropout ratio for input layer')
+flags.DEFINE_integer('num_layers', 2, 'Number of units in hidden layer 1.')
+flags.DEFINE_integer('weight_decay', 0.0002, 'penalize weights')
+flags.DEFINE_integer('keep_prob', 0.999, 'dropout ratio for hidden layers')
+flags.DEFINE_integer('keep_input', 0.9, 'dropout ratio for input layer')
 flags.DEFINE_integer('batch_size', 100, 'Batch size.  '
                      'Must divide evenly into the dataset sizes.')
 flags.DEFINE_integer('eval_batch_size', 10000, 'Batch size for eval.  '
@@ -51,9 +51,11 @@ flags.DEFINE_string('job-id', '001', 'Spearmint job id.')
 def run_training(learning_rate=FLAGS.learning_rate,
         momentum=FLAGS.momentum,
         max_norm=FLAGS.max_norm,
+        weight_decay=FLAGS.weight_decay,
         keep_prob=FLAGS.keep_prob,
         keep_input=FLAGS.keep_input,
-        beta2=FLAGS.beta2):
+        beta2=FLAGS.beta2,
+        num_layers=FLAGS.num_layers):
   """Train MNIST for a number of steps."""
   # Get the sets of images and labels for training, validation, and
   # test on MNIST.
@@ -66,9 +68,10 @@ def run_training(learning_rate=FLAGS.learning_rate,
                                                          mnist.IMAGE_PIXELS), name='images')
     labels_placeholder = tf.placeholder(tf.int32, shape=[None], name='labels')
 
-    keep_prob_pl = tf.placeholder(tf.float32)
-    keep_input_pl = tf.placeholder(tf.float32)
-
+    keep_prob_pl = tf.placeholder(tf.float32, name='keep_prob_pl')
+    keep_input_pl = tf.placeholder(tf.float32, name='keep_input_pl')
+    learning_rate_pl = tf.placeholder(tf.float32, name='learning_rate_pl')
+    
     def fill_feed_dict(data_set, batch_size=FLAGS.batch_size):
       # Create the feed_dict for the placeholders filled with the next
       # `batch size ` examples.
@@ -79,6 +82,7 @@ def run_training(learning_rate=FLAGS.learning_rate,
           labels_placeholder: labels_feed,
           keep_prob_pl: keep_prob,
           keep_input_pl: keep_input,
+          learning_rate_pl: learning_rate
       }
       return feed_dict
     
@@ -94,20 +98,20 @@ def run_training(learning_rate=FLAGS.learning_rate,
     with tf.variable_scope('feed_forward_model') as scope:
       logits, bn = mnist.inference(images_placeholder,
                          FLAGS.hidden1,
-                         FLAGS.hidden2,
-                         FLAGS.hidden3,
+                         num_layers,
+                         weight_decay,
                          keep_prob_pl,
                          keep_input_pl,
                          max_norm)
-
+                     
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
-    #loss_eval = mnist.loss( logits, labels_placeholder)
+    #loss_eval = mnist.loss( logits_eval, labels_placeholder)
     # Add to the Graph the Ops that calculate and apply gradients.
-    train_op = mnist.training(loss, learning_rate, momentum, beta2)
+    train_op = mnist.training(loss, learning_rate_pl, momentum, beta2)
     
     with tf.control_dependencies([train_op]):
-      train_op = apply(tf.group,[b.get_assigner() for b in bn])           
+      train_op = tf.group(*[b.get_assigner() for b in bn])           
     # Add the Op to compare the logits to the labels during evaluation.
     eval_correct = mnist.evaluation(logits, labels_placeholder)
     results = tf.placeholder( tf.float32, [4])
@@ -117,29 +121,32 @@ def run_training(learning_rate=FLAGS.learning_rate,
     summary_op = tf.merge_all_summaries()
   
     # Create a saver for writing training checkpoints.
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=2)
 
-    # Create a session for running Ops on the Graph.
+    train_loss = test_loss = 0
+    train_cor = test_cor = 0.97
+    previous_test_loss = None
 
     first_step = 0
+    # Create a session for running Ops on the Graph.
     sess = tf.Session()
+
+    summary_writer = tf.train.SummaryWriter(FLAGS.train_dir, sess.graph_def)
     restore_path = tf.train.latest_checkpoint("/Users/mikowals/projects/mnist")
     if restore_path:
       saver.restore(sess, restore_path)
       first_step = int(restore_path.split('/')[-1].split('-')[-1])
-
+      print('retored variables from ',  restore_path)
     else:
       # Run the Op to initialize the variables.
+      print('initializing variables')
       init = tf.initialize_all_variables()
       sess.run(init)
 
-    train_loss = test_loss = 0
-    train_cor = test_cor = 0.97
-    summary_writer = tf.train.SummaryWriter(FLAGS.train_dir, sess.graph_def)
     # And then after everything is built, start the training loop.
-    for step in xrange(first_step,FLAGS.max_steps):
+    for step in range(first_step,FLAGS.max_steps):
       start_time = time.time()
-      
+
       # Fill a feed dictionary with the actual set of images and labels
       # for this particular training step.
       feed_dict = fill_feed_dict(data_sets.train)
@@ -157,7 +164,7 @@ def run_training(learning_rate=FLAGS.learning_rate,
       
       # Save a checkpoint and evaluate the model periodically.
       if (step + 1) % 1000 == 0 or (step + 1) == FLAGS.max_steps:
-        #saver.save(sess, FLAGS.train_dir, global_step=step)
+        saver.save(sess, FLAGS.train_dir, global_step=step)
         # Evaluate against the training set.
         
         # Evaluate against the validation set.
@@ -172,9 +179,14 @@ def run_training(learning_rate=FLAGS.learning_rate,
         test_cor, test_loss = sess.run([eval_correct, loss], feed_dict=feed_dict)
         test_cor = test_cor / data_sets.validation.num_examples
         print (test_cor, test_loss )
+        #if previous_test_loss and test_loss > previous_test_loss:
+        #  learning_rate = learning_rate * 0.6
+        #if previous_test_loss and test_loss < previous_test_loss:
+        #  learning_rate = learning_rate * 1.02
+        #previous_test_loss = test_loss
         
 
-      if step % 100 == 0:
+      if step > 1000 and step % 100 == 0:
         # Print status to stdout.
         print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
         # Update the events file.
@@ -188,19 +200,20 @@ def run_training(learning_rate=FLAGS.learning_rate,
 
   return -test_cor 
 
-def main(job_id='a-1', params={
-  "learning_rate": np.array([FLAGS.learning_rate]),
-  "momentum": np.array([FLAGS.momentum]),
-  "max_norm": np.array([FLAGS.max_norm]),
-  "keep_prob": np.array([FLAGS.keep_prob]),
-  "keep_input": np.array([FLAGS.keep_input]),
-  "beta2": np.array([FLAGS.beta2])
-  }):
+def main(job_id='a-1', params={}):
+  params.setdefault("learning_rate", np.array([FLAGS.learning_rate]))
+  params.setdefault("momentum", np.array([FLAGS.momentum]))
+  params.setdefault("max_norm", np.array([FLAGS.max_norm]))
+  params.setdefault("keep_prob", np.array([FLAGS.keep_prob]))
+  params.setdefault("keep_input", np.array([FLAGS.keep_input]))
+  params.setdefault("beta2", np.array([FLAGS.beta2]))
+  
   return run_training(
         learning_rate=params['learning_rate'][0].item(),
         momentum=params['momentum'][0].item(),
         max_norm=params['max_norm'][0].item(),
         keep_prob=params['keep_prob'][0].item(),
+        keep_input = params['keep_input'][0].item(),
         beta2=params['beta2'][0].item())
 
 

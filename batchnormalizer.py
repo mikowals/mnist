@@ -29,17 +29,26 @@ class BatchNormalizer(object):
       (the output x will be batch-normalized).                              
   """
 
-  def __init__(self, depth, epsilon, ewma_trainer, scale_after_norm):
-    
-    self.mean = tf.Variable(tf.constant(0.0000, shape=[depth]),
-                            trainable=False)
-    self.variance = tf.Variable(tf.constant(1.0, shape=[depth]),
-                                trainable=False)
-    self.beta = tf.Variable(tf.constant(0.0000, shape=[depth]))
-    self.gamma = tf.Variable(tf.constant(1.0, shape=[depth]))
-    self.ewma_trainer = ewma_trainer
-    self.epsilon = epsilon
-    self.scale_after_norm = scale_after_norm
+  def __init__(self, depth, epsilon, ewma_trainer, scale_after_norm, keep_prob_prior=1.0, name=None):
+    with tf.variable_op_scope([self, depth, ewma_trainer, epsilon], name, 'batch_normalizer') as scope:
+      self.mean = tf.get_variable('mean', 
+        shape=[depth],
+        initializer=tf.constant_initializer(0.0),
+        trainable=False)
+      self.variance = tf.get_variable('variance', 
+        shape=[depth],
+        initializer=tf.constant_initializer(1.0),
+        trainable=False)
+      self.beta = tf.get_variable('beta', 
+        shape=[depth],
+        initializer=tf.constant_initializer(0.0))
+      self.gamma = tf.get_variable('gamma', 
+        shape=[depth],
+        initializer=tf.constant_initializer(1.0))
+      print (scope.name)
+      self.ewma_trainer = ewma_trainer
+      self.epsilon = epsilon
+      self.keep_prob_prior = keep_prob_prior
 
   def get_assigner(self):
     """Returns an EWMA apply op that must be invoked after optimization."""
@@ -50,14 +59,14 @@ class BatchNormalizer(object):
     if train:
       mean, variance = tf.nn.moments(x, [0])
       assign_mean = self.mean.assign(mean)
-      assign_variance = self.variance.assign(variance)
+      assign_variance = self.variance.assign(tf.mul(variance, self.keep_prob_prior))
       with tf.control_dependencies([assign_mean, assign_variance]):
         act_bn = tf.mul((x - mean), tf.rsqrt(variance + self.epsilon), name="act_bn")
         return tf.add(tf.mul(act_bn, self.gamma), self.beta)
       
     else:
-      mean = self.ewma_trainer.average(self.mean) or tf.reduce_mean(x, [0])
-      variance = self.ewma_trainer.average(self.variance) or tf.reduce_sum(tf.square(x),[0])
+      mean = self.ewma_trainer.average(self.mean) or self.epsilon
+      variance = self.ewma_trainer.average(self.variance) or self.epsilon
       local_beta = tf.identity(self.beta)
       local_gamma = tf.identity(self.gamma)
       act_bn = tf.mul((x-mean), tf.rsqrt(variance + self.epsilon), name="act1_bn")
