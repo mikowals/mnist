@@ -50,7 +50,7 @@ def add_noise(grad, var, noise=0.01):
   grad += tf.random_normal(stddev=noise)
   return (grad, var)
 
-def inference(images, hidden_units, hidden2_units, hidden3_units, keep_prob=1.0, keep_input=1.0, max_norm=100.0):
+def inference(images, hidden_units, hidden2_units):
   """Build the MNIST model up to where it may be used for inference.
 
   Args:
@@ -68,8 +68,7 @@ def inference(images, hidden_units, hidden2_units, hidden3_units, keep_prob=1.0,
                
       weights = tf.get_variable('weights', 
         [input_size, layer_size],
-        initializer=tf.random_normal_initializer(0,
-                              stddev=math.sqrt(2.0 /  float(input_size))))
+        initializer=tf.random_normal_initializer(stddev=0.01))
       biases = tf.get_variable( "biases", 
         [layer_size], 
         initializer=tf.constant_initializer(0.0))
@@ -78,20 +77,17 @@ def inference(images, hidden_units, hidden2_units, hidden3_units, keep_prob=1.0,
         tf.histogram_summary(weights.name, weights)
         #tf.histogram_summary(biases.name, biases)
      
-      return tf.nn.elu(tf.matmul(data, weights) + biases, name=scope)
+      return tf.nn.relu(tf.matmul(data, weights) + biases, name=scope)
   
   
   # Hidden 1
   hidden1= hidden_layer(images, IMAGE_PIXELS, hidden_units, 'hidden1')
   hidden2 = hidden_layer(hidden1, hidden_units, hidden_units, 'hidden2')
-  #hidden3, bn3 = hidden_layer(hidden2, hidden1_units, hidden1_units, 'hidden3')
-  #hidden4, bn4 = hidden_layer(hidden3, hidden1_units, hidden1_units, 'hidden4')
-  #hidden5, bn5 = hidden_layer(hidden4, hidden1_units, hidden1_units, 'hidden5')
-  # Linear
+  
   with tf.variable_scope('softmax_linear') as scope:
     weights = tf.get_variable("weights",
       [hidden_units, NUM_CLASSES],
-      initializer=tf.truncated_normal_initializer(stddev=math.sqrt(2.0 / float(hidden_units))))
+      initializer=tf.truncated_normal_initializer(stddev=0.01))
                             
     biases = tf.get_variable('biases',
       [NUM_CLASSES],
@@ -154,14 +150,13 @@ def training(loss, initial_learning_rate=0.001)
   
   tf.scalar_summary('model_learning_rate', learning_rate)
   # Create the gradient descent optimizer with the given learning rate.
-  opt = tf.train.AdamOptimizer(initial_learning_rate)
+  opt = tf.train.GradientOptimizer(initial_learning_rate)
   # Use the optimizer to apply the gradients that minimize the loss
   # (and also increment the global step counter) as a single training step.
   #max_norm_tensor = tf.Variable(max_norm, name='max_norm')
   # Compute the gradients for a list of variables.
-  grads_and_vars = opt.compute_gradients(loss)
-  noisy_grads_and_vars = [(add_noise(gv[0]), gv[1])) for gv in grads_and_vars]
-  train_op = opt.apply_gradients(noisy_grads_and_vars, global_step=global_step)
+  
+  train_op = opt.minimize(loss, global_step=global_step)
   
   return train_op
 
