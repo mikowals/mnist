@@ -47,7 +47,9 @@ flags.DEFINE_string('experiment-name', 'spearmint', 'Spearmint expiriement name'
 flags.DEFINE_string('database-address', 'localhost', 'mongodb host')
 flags.DEFINE_string('job-id', '001', 'Spearmint job id.')
 
-
+def make_adversarial_inputs(inputs, grad):
+  return tf.add(inputs, 0.08 * tf.sign(grad), name='adversarial_inputs')
+  
 def run_training(learning_rate=FLAGS.learning_rate,
         momentum=FLAGS.momentum,
         max_norm=FLAGS.max_norm,
@@ -66,9 +68,6 @@ def run_training(learning_rate=FLAGS.learning_rate,
                                                          mnist.IMAGE_PIXELS), name='images')
     labels_placeholder = tf.placeholder(tf.int32, shape=[None], name='labels')
 
-    keep_prob_pl = tf.placeholder(tf.float32)
-    keep_input_pl = tf.placeholder(tf.float32)
-
     def fill_feed_dict(data_set, batch_size=FLAGS.batch_size):
       # Create the feed_dict for the placeholders filled with the next
       # `batch size ` examples.
@@ -76,18 +75,14 @@ def run_training(learning_rate=FLAGS.learning_rate,
                                                      FLAGS.fake_data)
       feed_dict = {
           images_placeholder: images_feed,
-          labels_placeholder: labels_feed,
-          keep_prob_pl: keep_prob,
-          keep_input_pl: keep_input,
+          labels_placeholder: labels_feed
       }
       return feed_dict
     
     def fill_feed_dict_eval(data_set):
       return {
         images_placeholder: data_set._images,
-        labels_placeholder: data_set._labels,
-        keep_prob_pl: 1.0,
-        keep_input_pl: 1.0,
+        labels_placeholder: data_set._labels
       }
 
     # Build a Graph that computes predictions from the inference model.
@@ -95,24 +90,19 @@ def run_training(learning_rate=FLAGS.learning_rate,
       logits, bn = mnist.inference(images_placeholder,
                          FLAGS.hidden1,
                          FLAGS.hidden2,
-                         FLAGS.hidden3,
-                         keep_prob_pl,
-                         keep_input_pl,
-                         max_norm)
+                         FLAGS.hidden3)
 
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
+    input_gradient = tf.gradients(loss, images_placeholder)[0]
+    adversarial_inputs = make_adversarial_inputs(images_placeholder, input_gradient)
     #loss_eval = mnist.loss( logits, labels_placeholder)
     # Add to the Graph the Ops that calculate and apply gradients.
     train_op = mnist.training(loss, learning_rate, momentum, beta2)
     
-    with tf.control_dependencies([train_op]):
-      train_op = apply(tf.group,[b.get_assigner() for b in bn])           
     # Add the Op to compare the logits to the labels during evaluation.
     eval_correct = mnist.evaluation(logits, labels_placeholder)
-    results = tf.placeholder( tf.float32, [4])
-
-    summarize_evaluation = tf.scalar_summary(['correct_train', 'loss_train', 'correct_test', 'loss_test'], results)
+    
     # Build the summary operation based on the TF collection of Summaries.
     summary_op = tf.merge_all_summaries()
   
@@ -123,7 +113,7 @@ def run_training(learning_rate=FLAGS.learning_rate,
 
     first_step = 0
     sess = tf.Session()
-    restore_path = tf.train.latest_checkpoint("/Users/mikowals/projects/mnist")
+    restore_path = tf.train.latest_checkpoint("/home/ubuntu/mnist")
     if restore_path:
       saver.restore(sess, restore_path)
       first_step = int(restore_path.split('/')[-1].split('-')[-1])
@@ -149,6 +139,8 @@ def run_training(learning_rate=FLAGS.learning_rate,
       # inspect the values of your Ops or variables, you may include them
       # in the list passed to sess.run() and the value tensors will be
       # returned in the tuple from the call.
+      adv_inputs = sess.run(adversarial_inputs, feed_dict=feed_dict)
+      feed_dict[images_placeholder] = adv_inputs
       _, loss_value = sess.run([train_op, loss],
                                feed_dict=feed_dict)
       
