@@ -46,7 +46,9 @@ IMAGE_SIZE = 28
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 SEED = 25
 
-
+def add_noise(grad, var, noise=0.01):
+  grad += tf.random_normal(stddev=noise)
+  return (grad, var)
 
 def inference(images, hidden_units, hidden2_units, hidden3_units, keep_prob=1.0, keep_input=1.0, max_norm=100.0):
   """Build the MNIST model up to where it may be used for inference.
@@ -152,12 +154,14 @@ def training(loss, initial_learning_rate=0.001)
   
   tf.scalar_summary('model_learning_rate', learning_rate)
   # Create the gradient descent optimizer with the given learning rate.
-  optimizer = tf.train.AdamOptimizer(initial_learning_rate)
+  opt = tf.train.AdamOptimizer(initial_learning_rate)
   # Use the optimizer to apply the gradients that minimize the loss
   # (and also increment the global step counter) as a single training step.
   #max_norm_tensor = tf.Variable(max_norm, name='max_norm')
-
-  train_op = optimizer.minimize(loss, global_step=global_step)
+  # Compute the gradients for a list of variables.
+  grads_and_vars = opt.compute_gradients(loss)
+  noisy_grads_and_vars = [(add_noise(gv[0]), gv[1])) for gv in grads_and_vars]
+  train_op = opt.apply_gradients(noisy_grads_and_vars, global_step=global_step)
   
   return train_op
 
