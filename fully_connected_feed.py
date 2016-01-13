@@ -27,18 +27,10 @@ import mnist
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('learning_rate', 0.05, 'Initial learning rate.')
-flags.DEFINE_float('momentum', 0.9, 'Initial momentum.')
-flags.DEFINE_float('beta2', 0.999, 'second moment for gradient in Adam.')
-flags.DEFINE_float('max_norm', 2.0,'max norm of weights')
-flags.DEFINE_integer('max_steps', 50000, 'Number of steps to run trainer.')
-flags.DEFINE_integer('hidden1', 500, 'Number of units in hidden layer 1.')
-flags.DEFINE_integer('hidden2', 400, 'Number of units in hidden layer 2.')
-flags.DEFINE_integer('hidden3', 2048, 'Number of units in hidden layer 3.')
-flags.DEFINE_integer('keep_prob', 0.90, 'dropout ratio for hidden layers')
-flags.DEFINE_integer('keep_input', 0.90, 'dropout ratio for input layer')
-flags.DEFINE_integer('batch_size', 100, 'Batch size.  '
-                     'Must divide evenly into the dataset sizes.')
-flags.DEFINE_integer('eval_batch_size', 10000, 'Batch size for eval.  '
+flags.DEFINE_integer('max_steps', 750000, 'Number of steps to run trainer.')
+flags.DEFINE_integer('hidden1', 800, 'Number of units in hidden layer 1.')
+flags.DEFINE_integer('hidden2', 800, 'Number of units in hidden layer 2.')
+flags.DEFINE_integer('batch_size', 10, 'Batch size.  '
                      'Must divide evenly into the dataset sizes.')
 flags.DEFINE_string('train_dir', 'data', 'Directory to put the training data.')
 flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data '
@@ -50,12 +42,7 @@ flags.DEFINE_string('job-id', '001', 'Spearmint job id.')
 def make_adversarial_inputs(inputs, grad):
   return tf.add(inputs, 0.08 * tf.sign(grad), name='adversarial_inputs')
   
-def run_training(learning_rate=FLAGS.learning_rate,
-        momentum=FLAGS.momentum,
-        max_norm=FLAGS.max_norm,
-        keep_prob=FLAGS.keep_prob,
-        keep_input=FLAGS.keep_input,
-        beta2=FLAGS.beta2):
+def run_training(learning_rate=FLAGS.learning_rate):
   """Train MNIST for a number of steps."""
   # Get the sets of images and labels for training, validation, and
   # test on MNIST.
@@ -89,16 +76,16 @@ def run_training(learning_rate=FLAGS.learning_rate,
     with tf.variable_scope('feed_forward_model') as scope:
       logits, bn = mnist.inference(images_placeholder,
                          FLAGS.hidden1,
-                         FLAGS.hidden2,
-                         FLAGS.hidden3)
+                         FLAGS.hidden2)
 
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
+    
+    #generate adversarial examples
     input_gradient = tf.gradients(loss, images_placeholder)[0]
-    adversarial_inputs = make_adversarial_inputs(images_placeholder, input_gradient)
-    #loss_eval = mnist.loss( logits, labels_placeholder)
-    # Add to the Graph the Ops that calculate and apply gradients.
-    train_op = mnist.training(loss, learning_rate, momentum, beta2)
+    adversarial_inputs = tf.stop_gradient(make_adversarial_inputs(images_placeholder, input_gradient))
+    
+    train_op = mnist.training(loss, learning_rate)
     
     # Add the Op to compare the logits to the labels during evaluation.
     eval_correct = mnist.evaluation(logits, labels_placeholder)
@@ -160,9 +147,9 @@ def run_training(learning_rate=FLAGS.learning_rate,
         print(train_cor, train_loss)
   
         print('Validation Data Eval:')
-        feed_dict = fill_feed_dict_eval(data_sets.validation)
+        feed_dict = fill_feed_dict_eval(data_sets.test)
         test_cor, test_loss = sess.run([eval_correct, loss], feed_dict=feed_dict)
-        test_cor = test_cor / data_sets.validation.num_examples
+        test_cor = test_cor / data_sets.test.num_examples
         print (test_cor, test_loss )
         
 
@@ -188,12 +175,7 @@ def main(job_id='a-1', params={
   "keep_input": np.array([FLAGS.keep_input]),
   "beta2": np.array([FLAGS.beta2])
   }):
-  return run_training(
-        learning_rate=params['learning_rate'][0].item(),
-        momentum=params['momentum'][0].item(),
-        max_norm=params['max_norm'][0].item(),
-        keep_prob=params['keep_prob'][0].item(),
-        beta2=params['beta2'][0].item())
+  return run_training(learning_rate=params['learning_rate'][0].item())
 
 
 if __name__ == '__main__':
