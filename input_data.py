@@ -12,6 +12,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 
+numpy.random.seed(10)
 
 def maybe_download(filename, work_directory):
   """Download the data from Yann's website, unless it's already here."""
@@ -154,7 +155,7 @@ def read_data_sets(train_dir, fake_data=False, one_hot=False):
   TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
   TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
   TEST_LABELS = 't10k-labels-idx1-ubyte.gz'
-  VALIDATION_SIZE = 5000
+  VALIDATION_SIZE = 000
 
   local_file = maybe_download(TRAIN_IMAGES, train_dir)
   train_images = extract_images(local_file)
