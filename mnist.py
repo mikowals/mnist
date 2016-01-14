@@ -81,7 +81,7 @@ def inference(images, hidden_units, hidden2_units, noise_std=0.0):
       raw_unit = tf.matmul(layer_activations[ll], weights) + biases
       if noise_std > 0.0:
         raw_unit += tf.random_normal(tf.shape(raw_unit), stddev=noise_std)
-      if ll == last_layer
+      if ll == last_layer:
         return raw_unit
       else
         return tf.nn.elu(raw_unit)
