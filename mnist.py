@@ -65,7 +65,7 @@ def inference(images, hidden_units, hidden2_units, noise_std=0.0):
   layer_activations = [images]
   last_layer = len(layers)-2
   for ll in range(len(layers)-1):
-    with tf.variable_scope( 'layer_'+str(ii)) as scope:
+    with tf.variable_scope( 'layer_'+str(ll)) as scope:
      in_units = layers[ll]
      out_units = layers[ll+1]
       weights = tf.get_variable('weights', 
@@ -82,29 +82,10 @@ def inference(images, hidden_units, hidden2_units, noise_std=0.0):
       if noise_std > 0.0:
         raw_unit += tf.random_normal(tf.shape(raw_unit), stddev=noise_std)
       if ll == last_layer:
-        return raw_unit
+        layer_activations.append(raw_unit)
       else
-        return tf.nn.elu(raw_unit)
-  
-  
-  # Hidden 1
-  hidden1= hidden_layer(images, IMAGE_PIXELS, hidden_units, 'hidden1')
-  hidden2 = hidden_layer(hidden1, hidden_units, hidden_units, 'hidden2')
-  
-  with tf.variable_scope('softmax_linear') as scope:
-    weights = tf.get_variable("weights",
-      [hidden_units, NUM_CLASSES],
-      initializer=tf.random_normal_initializer(stddev=tf.sqrt(2.0 / float(hidden_units))))
-                            
-    biases = tf.get_variable('biases',
-      [NUM_CLASSES],
-      initializer=tf.constant_initializer(0.0))
-    #weights = clip_weight_norm(weights, max_norm, name='clipped_weights')
-    if not scope.reuse:
-      tf.histogram_summary(weights.name, weights)
-      tf.histogram_summary(biases.name, biases)
-    
-  return tf.add(tf.matmul(hidden2, weights), biases, name="logits")
+        layer_activations.append(tf.nn.elu(raw_unit))
+  return layer_activations[-1]
 
 
 def loss(logits, labels):
