@@ -61,25 +61,30 @@ def inference(images, hidden_units, hidden2_units, noise_std=0.0):
   Returns:
     softmax_linear: Output tensor with the computed logits.
   """
-  
-  def hidden_layer(data, input_size, layer_size, name=None):
-    with tf.variable_scope( name) as scope:
-                                
-               
+  layers = [784, 400, 400, 256, 10]
+  layer_activations = [images]
+  last_layer = len(layers)-2
+  for ll in range(len(layers)-1):
+    with tf.variable_scope( 'layer_'+str(ii)) as scope:
+     in_units = layers[ll]
+     out_units = layers[ll+1]
       weights = tf.get_variable('weights', 
-        [input_size, layer_size],
-        initializer=tf.random_normal_initializer(stddev=tf.sqrt(2.0 / float(input_size))))
+        [in_units, out_units],
+        initializer=tf.random_normal_initializer(stddev=tf.sqrt(2.0 / float(in_units))))
       biases = tf.get_variable( "biases", 
-        [layer_size], 
+        [out_units], 
         initializer=tf.constant_initializer(0.0))
       
       if not scope.reuse:
         tf.histogram_summary(weights.name, weights)
         #tf.histogram_summary(biases.name, biases)
-      raw_unit = tf.matmul(data, weights) + biases
+      raw_unit = tf.matmul(layer_activations[ll], weights) + biases
       if noise_std > 0.0:
         raw_unit += tf.random_normal(tf.shape(raw_unit), stddev=noise_std)
-      return tf.nn.relu(raw_unit)
+      if ll == last_layer
+        return raw_unit
+      else
+        return tf.nn.elu(raw_unit)
   
   
   # Hidden 1
