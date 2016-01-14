@@ -78,7 +78,7 @@ def inference(images, hidden_units, hidden2_units, noise_std=0.0):
         #tf.histogram_summary(biases.name, biases)
       raw_unit = tf.matmul(data, weights) + biases
       if noise_std > 0.0:
-        raw_unit += tf.random_normal([input_size, layer_size], stddev=noise_std)
+        raw_unit += tf.random_normal(tf.shape(raw_unit), stddev=noise_std)
       return tf.nn.relu(raw_unit)
   
   
