@@ -93,7 +93,7 @@ class DataSet(object):
                               images.shape[1] * images.shape[2])
       # Convert from [0, 255] -> [0.0, 1.0].
       images = images.astype(numpy.float32)
-      images = numpy.multiply(numpy.subtract(images, 122.5), 1.0 / 122.5)
+      images = numpy.multiply(images, 1.0 / 255.0)
     self._images = images
     self._labels = labels
     self._epochs_completed = 0
