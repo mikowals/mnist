@@ -50,7 +50,7 @@ def add_noise(grad, var, noise=0.01):
   grad += tf.random_normal(stddev=noise)
   return (grad, var)
 
-def inference(images, hidden_units, hidden2_units):
+def inference(images, hidden_units, hidden2_units, noise_std=0.0):
   """Build the MNIST model up to where it may be used for inference.
 
   Args:
@@ -76,8 +76,10 @@ def inference(images, hidden_units, hidden2_units):
       if not scope.reuse:
         tf.histogram_summary(weights.name, weights)
         #tf.histogram_summary(biases.name, biases)
-     
-      return tf.nn.relu(tf.matmul(data, weights) + biases)
+      raw_unit = tf.matmul(data, weights) + biases
+      if noise_std > 0.0:
+        raw_unit += tf.random_normal([input_size, layer_size], stddev=noise_std)
+      return tf.nn.relu(raw_unit)
   
   
   # Hidden 1
