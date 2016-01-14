@@ -30,6 +30,7 @@ flags.DEFINE_float('learning_rate', 0.05, 'Initial learning rate.')
 flags.DEFINE_integer('max_steps', 750000, 'Number of steps to run trainer.')
 flags.DEFINE_integer('hidden1', 800, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden2', 800, 'Number of units in hidden layer 2.')
+flags.DEFINE_integer('noise_std', 0.3, 'additive noise for hidden units in training')
 flags.DEFINE_integer('batch_size', 10, 'Batch size.  '
                      'Must divide evenly into the dataset sizes.')
 flags.DEFINE_string('train_dir', 'data', 'Directory to put the training data.')
@@ -55,7 +56,8 @@ def run_training(learning_rate=FLAGS.learning_rate):
     images_placeholder = tf.placeholder(tf.float32, shape=(None,
                                                          mnist.IMAGE_PIXELS), name='images')
     labels_placeholder = tf.placeholder(tf.int32, shape=[None], name='labels')
-
+    noise_std_pl = tf.placeholder(tf.float32, name='noise_std')
+    
     def fill_feed_dict(data_set, batch_size=FLAGS.batch_size):
       # Create the feed_dict for the placeholders filled with the next
       # `batch size ` examples.
@@ -70,14 +72,16 @@ def run_training(learning_rate=FLAGS.learning_rate):
     def fill_feed_dict_eval(data_set):
       return {
         images_placeholder: data_set._images,
-        labels_placeholder: data_set._labels
+        labels_placeholder: data_set._labels,
+        noise_std_pl: 0.0
       }
 
     # Build a Graph that computes predictions from the inference model.
     with tf.variable_scope('feed_forward_model') as scope:
       logits = mnist.inference(images_placeholder,
                          FLAGS.hidden1,
-                         FLAGS.hidden2)
+                         FLAGS.hidden2,
+                         noise_std_pl)
 
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
@@ -121,7 +125,7 @@ def run_training(learning_rate=FLAGS.learning_rate):
       # Fill a feed dictionary with the actual set of images and labels
       # for this particular training step.
       feed_dict = fill_feed_dict(data_sets.train)
-      
+      feed_dict[noise_std_pl] = 0.0
       # Run one step of the model.  The return values are the activations
       # from the `train_op` (which is discarded) and the `loss` Op.  To
       # inspect the values of your Ops or variables, you may include them
@@ -129,6 +133,7 @@ def run_training(learning_rate=FLAGS.learning_rate):
       # returned in the tuple from the call.
       adv_inputs = sess.run(adversarial_inputs, feed_dict=feed_dict)
       feed_dict[images_placeholder] = adv_inputs
+      feed_dict[noise_std_pl] = FLAGS.noise_std
       _, loss_value = sess.run([train_op, loss],
                                feed_dict=feed_dict)
       
