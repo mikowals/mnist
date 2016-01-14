@@ -50,6 +50,7 @@ def run_training(learning_rate=FLAGS.learning_rate):
 
   # Tell TensorFlow that the model will be built into the default Graph.
   with tf.Graph().as_default():
+    tf.set_random_seed(10)
     # Generate placeholders for the images and labels.
     images_placeholder = tf.placeholder(tf.float32, shape=(None,
                                                          mnist.IMAGE_PIXELS), name='images')
@@ -157,13 +158,7 @@ def run_training(learning_rate=FLAGS.learning_rate):
         # Print status to stdout.
         print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
         # Update the events file.
-        feed_dict[results] = [
-          train_cor, 
-          train_loss, 
-          test_cor, 
-          test_loss]
-        summary_str = sess.run(summary_op, feed_dict=feed_dict)
-        summary_writer.add_summary(summary_str, step)
+        
 
   return -test_cor 
 
