@@ -77,7 +77,7 @@ def inference(images, hidden_units, hidden2_units):
         tf.histogram_summary(weights.name, weights)
         #tf.histogram_summary(biases.name, biases)
      
-      return tf.nn.relu(tf.matmul(data, weights) + biases, name=scope)
+      return tf.nn.relu(tf.matmul(data, weights) + biases)
   
   
   # Hidden 1
@@ -128,7 +128,7 @@ def loss(logits, labels):
   return loss
 
 
-def training(loss, initial_learning_rate=0.001)
+def training(loss, initial_learning_rate=0.05):
   """Sets up the training Ops.
 
   Creates a summarizer to track the loss over time in TensorBoard.
@@ -148,7 +148,7 @@ def training(loss, initial_learning_rate=0.001)
   # Create a variable to track the global step.
   global_step = tf.Variable(0.0, name='global_step', trainable=False)
   
-  tf.scalar_summary('model_learning_rate', learning_rate)
+  
   # Create the gradient descent optimizer with the given learning rate.
   opt = tf.train.GradientDescentOptimizer(initial_learning_rate)
   # Use the optimizer to apply the gradients that minimize the loss
