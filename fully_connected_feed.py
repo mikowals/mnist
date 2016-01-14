@@ -75,7 +75,7 @@ def run_training(learning_rate=FLAGS.learning_rate):
 
     # Build a Graph that computes predictions from the inference model.
     with tf.variable_scope('feed_forward_model') as scope:
-      logits, bn = mnist.inference(images_placeholder,
+      logits = mnist.inference(images_placeholder,
                          FLAGS.hidden1,
                          FLAGS.hidden2)
 
@@ -162,15 +162,8 @@ def run_training(learning_rate=FLAGS.learning_rate):
 
   return -test_cor 
 
-def main(job_id='a-1', params={
-  "learning_rate": np.array([FLAGS.learning_rate]),
-  "momentum": np.array([FLAGS.momentum]),
-  "max_norm": np.array([FLAGS.max_norm]),
-  "keep_prob": np.array([FLAGS.keep_prob]),
-  "keep_input": np.array([FLAGS.keep_input]),
-  "beta2": np.array([FLAGS.beta2])
-  }):
-  return run_training(learning_rate=params['learning_rate'][0].item())
+def main(_):
+  return run_training()
 
 
 if __name__ == '__main__':
