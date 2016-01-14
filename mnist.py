@@ -63,12 +63,12 @@ def inference(images, hidden_units, hidden2_units):
   """
   
   def hidden_layer(data, input_size, layer_size, name=None):
-    with tf.variable_op_scope([data, input_size, layer_size], name, "hidden_layer") as scope:
+    with tf.variable_scope( name) as scope:
                                 
                
       weights = tf.get_variable('weights', 
         [input_size, layer_size],
-        initializer=tf.random_normal_initializer(stddev=0.01))
+        initializer=tf.random_normal_initializer(stddev=tf.sqrt(2.0 / float(input_size))))
       biases = tf.get_variable( "biases", 
         [layer_size], 
         initializer=tf.constant_initializer(0.0))
@@ -87,7 +87,7 @@ def inference(images, hidden_units, hidden2_units):
   with tf.variable_scope('softmax_linear') as scope:
     weights = tf.get_variable("weights",
       [hidden_units, NUM_CLASSES],
-      initializer=tf.truncated_normal_initializer(stddev=0.01))
+      initializer=tf.random_normal_initializer(stddev=tf.sqrt(2.0 / float(hidden_units))))
                             
     biases = tf.get_variable('biases',
       [NUM_CLASSES],
@@ -150,7 +150,7 @@ def training(loss, initial_learning_rate=0.001)
   
   tf.scalar_summary('model_learning_rate', learning_rate)
   # Create the gradient descent optimizer with the given learning rate.
-  opt = tf.train.GradientOptimizer(initial_learning_rate)
+  opt = tf.train.GradientDescentOptimizer(initial_learning_rate)
   # Use the optimizer to apply the gradients that minimize the loss
   # (and also increment the global step counter) as a single training step.
   #max_norm_tensor = tf.Variable(max_norm, name='max_norm')
