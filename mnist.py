@@ -50,7 +50,7 @@ def add_noise(grad, var, noise=0.01):
   grad += tf.random_normal(stddev=noise)
   return (grad, var)
 
-def inference(images, hidden_units, hidden2_units, noise_std=0.0):
+def inference(images, hidden1_units, hidden2_units, init_std=0.01, noise_std=0.0):
   """Build the MNIST model up to where it may be used for inference.
 
   Args:
@@ -61,7 +61,7 @@ def inference(images, hidden_units, hidden2_units, noise_std=0.0):
   Returns:
     softmax_linear: Output tensor with the computed logits.
   """
-  layers = [784, 400, 400, 256, 10]
+  layers = [784, hidden1_units, hidden2_units, 10]
   layer_activations = [images]
   last_layer = len(layers)-2
   for ll in range(len(layers)-1):
@@ -70,7 +70,7 @@ def inference(images, hidden_units, hidden2_units, noise_std=0.0):
      out_units = layers[ll+1]
       weights = tf.get_variable('weights', 
         [in_units, out_units],
-        initializer=tf.random_normal_initializer(stddev=tf.sqrt(2.0 / float(in_units))))
+        initializer=tf.random_normal_initializer(stddev=init_std))
       biases = tf.get_variable( "biases", 
         [out_units], 
         initializer=tf.constant_initializer(0.0))
