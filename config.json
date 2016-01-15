@@ -3,41 +3,35 @@
     "main-file"       : "fully_connected_feed.py",
     "experiment-name" : "mnist-2layer-1000-batch-normalization",
     "variables" : {
-        "learning_rate" : {
+        "noise_std" : {
             "type" : "FLOAT",
             "size" : 1,
-            "min"  : 1e-5,
-            "max"  : 0.1
+            "min"  : 0.0,
+            "max"  : 0.5
         },
-        "keep_prob" : {
+        "adversarial_noise" : {
             "type" : "FLOAT",
             "size" : 1,
-            "min"  : 0.5,
-            "max"  : 1.0
+            "min"  : 0.05,
+            "max"  : 0.25
         },
-        "keep_input" : {
+        "init_std" : {
             "type" : "FLOAT",
             "size" : 1,
-            "min"  : 0.5,
-            "max"  : 1.0
+            "min"  : 0.001,
+            "max"  : 0.05
         },
-        "max_norm" : {
-            "type" : "FLOAT",
+        "hidden1_units" : {
+            "type" : "INT",
             "size" : 1,
-            "min"  : 0.5,
-            "max"  : 12
+            "min"  : 250,
+            "max"  : 800
         },
-        "momentum" : {
-            "type" : "FLOAT",
+        "hidden2_units" : {
+            "type" : "INT",
             "size" : 1,
-            "min"  : 0.5,
-            "max"  : 0.999
-        },
-        "beta2" : {
-            "type" : "FLOAT",
-            "size" : 1,
-            "min"  : 0.7,
-            "max"  : 0.99999
+            "min"  : 250,
+            "max"  : 800
         }
     }
 }
