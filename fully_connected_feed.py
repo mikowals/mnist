@@ -128,6 +128,7 @@ def run_training(
     train_cor = test_cor = 0.97
     summary_writer = tf.train.SummaryWriter(FLAGS.train_dir, sess.graph_def)
     # And then after everything is built, start the training loop.
+    avg_test_loss = 0
     for step in xrange(first_step,FLAGS.max_steps):
       start_time = time.time()
       
@@ -167,6 +168,10 @@ def run_training(
         test_cor = test_cor / data_sets.validation.num_examples
         print (test_cor, test_loss )
         
+        if (avg_test_loss > 0.0):
+          avg_test_loss = avg_test_loss * 0.9 + test_loss * 0.1
+        else:
+          avg_test_loss = test_loss
 
       if step % 100 == 0:
         # Print status to stdout.
@@ -174,7 +179,7 @@ def run_training(
         # Update the events file.
         
 
-  return -test_cor 
+  return avg_test_loss
 
 def main(job_id='a-1', params={}):
   params.setdefault("learning_rate", np.array([FLAGS.learning_rate]))
