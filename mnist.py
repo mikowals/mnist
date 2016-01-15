@@ -138,7 +138,7 @@ def training(loss, initial_learning_rate=0.05):
   
   
   # Create the gradient descent optimizer with the given learning rate.
-  opt = tf.train.GradientDescentOptimizer(initial_learning_rate)
+  opt = tf.train.AdamOptimizer(initial_learning_rate, epsilon=0.01)
   # Use the optimizer to apply the gradients that minimize the loss
   # (and also increment the global step counter) as a single training step.
   #max_norm_tensor = tf.Variable(max_norm, name='max_norm')
