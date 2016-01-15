@@ -28,8 +28,10 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('learning_rate', 0.05, 'Initial learning rate.')
 flags.DEFINE_integer('max_steps', 750000, 'Number of steps to run trainer.')
-flags.DEFINE_integer('hidden1', 800, 'Number of units in hidden layer 1.')
-flags.DEFINE_integer('hidden2', 800, 'Number of units in hidden layer 2.')
+flags.DEFINE_integer('hidden1_units', 800, 'Number of units in hidden layer 1.')
+flags.DEFINE_integer('hidden2_units', 800, 'Number of units in hidden layer 2.')
+flags.DEFINE_integer('adversarial_noise', 0.08, 'additive noise for fast gradient sign')
+flags.DEFINE_integer('init_std', 0.01, 'initialization stddev')
 flags.DEFINE_integer('noise_std', 0.3, 'additive noise for hidden units in training')
 flags.DEFINE_integer('batch_size', 10, 'Batch size.  '
                      'Must divide evenly into the dataset sizes.')
@@ -40,10 +42,16 @@ flags.DEFINE_string('experiment-name', 'spearmint', 'Spearmint expiriement name'
 flags.DEFINE_string('database-address', 'localhost', 'mongodb host')
 flags.DEFINE_string('job-id', '001', 'Spearmint job id.')
 
-def make_adversarial_inputs(inputs, grad):
-  return tf.add(inputs, 0.08 * tf.sign(grad), name='adversarial_inputs')
+def make_adversarial_inputs(inputs, grad, noise):
+  return tf.add(inputs, noise * tf.sign(grad), name='adversarial_inputs')
   
-def run_training(learning_rate=FLAGS.learning_rate):
+def run_training(  
+  learning_rate=FLAGS.learning_rate,
+  hidden1_units=FLAGS.hidden1_units,
+  hidden2_units=FLAGS.hidden2_units,
+  init_std=FLAGS.init_std,
+  noise_std = FLAGS.noise_std,
+  adversarial_noise=FLAGS.adversarial_noise):
   """Train MNIST for a number of steps."""
   # Get the sets of images and labels for training, validation, and
   # test on MNIST.
@@ -79,8 +87,9 @@ def run_training(learning_rate=FLAGS.learning_rate):
     # Build a Graph that computes predictions from the inference model.
     with tf.variable_scope('feed_forward_model') as scope:
       logits = mnist.inference(images_placeholder,
-                         FLAGS.hidden1,
-                         FLAGS.hidden2,
+                         hidden1_units,
+                         hidden2_units,
+                         init_std,
                          noise_std_pl)
 
     # Add to the Graph the Ops for loss calculation.
@@ -88,7 +97,7 @@ def run_training(learning_rate=FLAGS.learning_rate):
     
     #generate adversarial examples
     input_gradient = tf.gradients(loss, images_placeholder)[0]
-    adversarial_inputs = tf.stop_gradient(make_adversarial_inputs(images_placeholder, input_gradient))
+    adversarial_inputs = tf.stop_gradient(make_adversarial_inputs(images_placeholder, input_gradient, adversarial_noise))
     
     train_op = mnist.training(loss, learning_rate)
     
@@ -133,7 +142,7 @@ def run_training(learning_rate=FLAGS.learning_rate):
       # returned in the tuple from the call.
       adv_inputs = sess.run(adversarial_inputs, feed_dict=feed_dict)
       feed_dict[images_placeholder] = adv_inputs
-      feed_dict[noise_std_pl] = FLAGS.noise_std
+      feed_dict[noise_std_pl] = noise_std
       _, loss_value = sess.run([train_op, loss],
                                feed_dict=feed_dict)
       
@@ -167,9 +176,21 @@ def run_training(learning_rate=FLAGS.learning_rate):
 
   return -test_cor 
 
-def main(_):
-  return run_training()
-
-
+def main(job_id='a-1', params={}):
+  params.setdefault("learning_rate", np.array([FLAGS.learning_rate]))
+  params.setdefault("hidden1_units", np.array([FLAGS.hidden1_units]))
+  params.setdefault("hidden2_units", np.array([FLAGS.hidden2_units]))
+  params.setdefault("init_std", np.array([FLAGS.init_std]))
+  params.setdefault("noise_std", np.array([FLAGS.noise_std]))
+  params.setdefault("adversarial_noise", np.array([FLAGS.adversarial_noise]))
+  
+  return run_training(
+        learning_rate=params['learning_rate'][0].item(),
+        hidden1_units=params['hidden1_units'][0].item(),
+        hidden2_units=params['hidden2_units'][0].item(),
+        init_std=params['init_std'][0].item(),
+        noise_std=params['noise_std'][0].item(),
+        adversarial_noise=params['adversarial_noise'][0].item())
+        
 if __name__ == '__main__':
   tf.app.run()
