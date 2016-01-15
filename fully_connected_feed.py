@@ -26,14 +26,14 @@ import mnist
 # Basic model parameters as external flags.
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-flags.DEFINE_float('learning_rate', 0.05, 'Initial learning rate.')
-flags.DEFINE_integer('max_steps', 300000, 'Number of steps to run trainer.')
+flags.DEFINE_float('learning_rate', 0.002, 'Initial learning rate.')
+flags.DEFINE_integer('max_steps', 50000, 'Number of steps to run trainer.')
 flags.DEFINE_integer('hidden1_units', 800, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden2_units', 800, 'Number of units in hidden layer 2.')
 flags.DEFINE_integer('adversarial_noise', 0.08, 'additive noise for fast gradient sign')
 flags.DEFINE_integer('init_std', 0.01, 'initialization stddev')
 flags.DEFINE_integer('noise_std', 0.3, 'additive noise for hidden units in training')
-flags.DEFINE_integer('batch_size', 10, 'Batch size.  '
+flags.DEFINE_integer('batch_size', 50, 'Batch size.  '
                      'Must divide evenly into the dataset sizes.')
 flags.DEFINE_string('train_dir', 'data', 'Directory to put the training data.')
 flags.DEFINE_boolean('fake_data', False, 'If true, uses fake data '
