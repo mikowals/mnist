@@ -162,9 +162,9 @@ def run_training(
         print(train_cor, train_loss)
   
         print('Validation Data Eval:')
-        feed_dict = fill_feed_dict_eval(data_sets.test)
+        feed_dict = fill_feed_dict_eval(data_sets.validation)
         test_cor, test_loss = sess.run([eval_correct, loss], feed_dict=feed_dict)
-        test_cor = test_cor / data_sets.test.num_examples
+        test_cor = test_cor / data_sets.validation.num_examples
         print (test_cor, test_loss )
         
 
