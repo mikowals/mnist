@@ -27,7 +27,7 @@ import mnist
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float('learning_rate', 0.05, 'Initial learning rate.')
-flags.DEFINE_integer('max_steps', 750000, 'Number of steps to run trainer.')
+flags.DEFINE_integer('max_steps', 300000, 'Number of steps to run trainer.')
 flags.DEFINE_integer('hidden1_units', 800, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden2_units', 800, 'Number of units in hidden layer 2.')
 flags.DEFINE_integer('adversarial_noise', 0.08, 'additive noise for fast gradient sign')
